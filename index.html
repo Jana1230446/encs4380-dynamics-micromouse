@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -46,9 +47,74 @@
 
     <h3>System Response</h3>
 
-    <div id="responseGraph">
-        Graph will appear here.
-    </div>
+    <div id="responseGraph" style="width:100%; max-width:900px; height:450px;"></div>
+    
+<script>
+    //get the sliders and input selector 
+    const gainSlider = document.getElementById("gain");
+    const tauSlider = document.getElementById("tau");
+    const inputSelector = document.getElementById("inputType");
 
+    function updateGraph(){
+        const k = parseFloat(gainSlider.value);
+        const tau = parseFloat(tauSlider.value);
+        const inputType = inputSelector.value;
+
+        let time = [];
+        let output = [];
+        let input = [];
+
+
+        for (leti=0 ; i<= 200 ; i++){
+            let t = i * (5 * tau / 200);
+            let y ; 
+            let x ; 
+            if (inputType === "step"){
+                x = 1;
+                // first order step response 
+                y= k* (1 - Math.exp(-t / tau));
+                
+            }else {
+                x = t ; 
+                //first order ramp response
+                y = k*( t - tau * (1 - Math.exp(-t / tau))); 
+            }
+            time.push(t);
+            input.push(x);
+            output.push(y);
+        }
+
+        const inputTrace = {
+            x: time , 
+            y: output,
+            mode: "lines",
+            name: "Output y(t)",
+            line: { color: "red" , width: 3}
+        };
+        const layout = {
+            title: "First-Order System Response",
+            xaxis: { title: "Time (seconds)" },
+            yaxis: { title: "Amplitude" },
+            legend: { orientation: "h" },
+            margin: { t: 60, b: 60 }
+        };
+        Plotly.react(
+            "responseGraph",
+            [inputTrace, outputTrace],
+            layout,
+            { responsive: true }
+        );
+        
+    }
+    //update graph whenever a slider changes
+    gainSlider.addEventListener("input", updateGraph);
+    tauSlider.addEventListener("input", updateGraph);
+    input Selector.addEventListener("change" , updateGraph);
+
+    // draw the first graph when the page loads
+    updateGraph();
+
+</script>
 </body>
 </html>
+    
