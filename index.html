@@ -65,7 +65,7 @@
         let input = [];
 
 
-        for (leti=0 ; i<= 200 ; i++){
+        for (let i=0 ; i<= 200 ; i++){
             let t = i * (5 * tau / 200);
             let y ; 
             let x ; 
@@ -83,13 +83,21 @@
             input.push(x);
             output.push(y);
         }
-
+    
         const inputTrace = {
-            x: time , 
-            y: output,
-            mode: "lines",
-            name: "Output y(t)",
-            line: { color: "red" , width: 3}
+        x: time,
+        y: input,
+        mode: "lines",
+        name: "Input x(t)",
+        line: { color: "blue", dash: "dash" }
+        };
+    
+       const outputTrace = {
+        x: time,
+        y: output,
+        mode: "lines",
+        name: "Output y(t)",
+        line: { color: "red", width: 3 }
         };
         const layout = {
             title: "First-Order System Response",
@@ -109,7 +117,7 @@
     //update graph whenever a slider changes
     gainSlider.addEventListener("input", updateGraph);
     tauSlider.addEventListener("input", updateGraph);
-    input Selector.addEventListener("change" , updateGraph);
+    input inputSelector.addEventListener("change" , updateGraph);
 
     // draw the first graph when the page loads
     updateGraph();
