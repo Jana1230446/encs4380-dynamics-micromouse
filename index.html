@@ -7,51 +7,203 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Dynamic Characteristics Toolkit</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0; 
+            font-family: Arial, sans-serif;
+            background-color: #f4f7fb;
+            color: #243047;
+        }
+        
+        .container {
+            max-width: 1250px;
+            margin: 0 auto;
+            padding: 35px 25px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+    
+        .header h1 {
+            color: #17365d;
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+    
+        .header h2 {
+            color: #3478c0;
+            font-size: 24px;
+        }
+    
+        .header p {
+            color: #64748b;
+            font-size: 16px;
+        }
+    
+        .dashboard {
+            display: grid;
+            grid-template-columns: 300px minmax(0, 1fr);
+            gap: 25px;
+            align-items: start;
+        }
+    
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+        }
+    
+        .card h3 {
+            margin-top: 0 ;
+            color:  #17365d;
+        }
+    
+        .control-group {
+             margin-bottom: 25px;
+        }
+    
+        .control-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+    
+        input[type="range"] {
+            width: 100%;
+            accent-color: #3478c0;
+            cursor: pointer;
+        }
+    
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: white;
+            font-size: 15px;
+        }
+    
+        .model-card {
+            margin-bottom: 25px;
+            text-align: center;
+        }
+    
+        .model-card p {
+            font-size: 20px;
+        }
+    
+        #responseGraph {
+            width: 100%;
+            height: 450px;
+        }
+    
+        @media (max-width: 850px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 20px 12px;
+            }
+            .header h1 {
+                font-size: 27px;
+            }
+            .card {
+                padding: 18px;
+            }
+        }
+    </style>
 </head>
 
     
 <body>
+<div class="container">
 
-    <h1>Dynamic Characteristics Toolkit</h1>
+    <!-- Page header  --> 
+    <div class="header">
+        <h1>Dynamic Characteristics Toolkit</h1>
 
-    <h2>Module 1: First-Order Time Response</h2>
+        <h2>Module 1: First-Order Time Response</h2>
 
-    <p>
-        Explore how gain (K) and time constant (τ)
-        affect the response of a first-order system.
-    </p>
+        <p>
+            Explore how gain (K) and time constant (τ)
+            affect the response of a first-order system.
+        </p>
+    </div>
 
-    <h3>System Model</h3>
+    <!-- System model -->
+    <div class="card model-card">
+        <h3>System Model</h3>
+        <p>τ dy/dt + y = Kx</p>
+    </div>
 
-    <p>τ dy/dt + y = Kx</p>
+    <!--main dashboard  -->
+    <div class="dashboard">
 
-    <h3>Controls</h3>
+        <!-- controls card -->
+        <div class="card">
 
-    <label for="gain">Gain (K):</label>
-    <span id="gainValue">1.0</span>
-    <input type="range" id="gain" min="0.5" max="5"
-           step="0.1" value="1">
+            <h3>Controls</h3>
 
-    <br><br>
+            <div class="control-group">
+                <label for="gain">
+                    Gain (K):
+                    <span id="gainValue">1.0</span>
+                </label>
 
-    <label for="tau">Time Constant (τ):</label>
-    <span id="tauValue">1.0</span> s
-    <input type="range" id="tau" min="0.1" max="10"
-           step="0.1" value="1">
+                <input type="range"
+                       id="gain"
+                       min="0.5"
+                       max="5"
+                       step="0.1"
+                       value="1">
+            </div>
 
-    <br><br>
+            <div class="control-group">
+                <label for="tau">
+                    Time Constant (τ):
+                    <span id="tauValue">1.0</span> s
+                </label>
 
-    <label for="inputType">Input Type:</label>
+                <input type="range"
+                       id="tau"
+                       min="0.1"
+                       max="10"
+                       step="0.1"
+                       value="1">
+            </div>
 
-    <select id="inputType">
-        <option value="step">Step Input</option>
-        <option value="ramp">Ramp Input</option>
-    </select>
+            <div class="control-group">
+                <label for="inputType">Input Type:</label>
 
-    <h3>System Response</h3>
+                <select id="inputType">
+                    <option value="step">Step Input</option>
+                    <option value="ramp">Ramp Input</option>
+                </select>
+            </div>
 
-    <div id="responseGraph" style="width:100%; max-width:900px; height:450px;"></div>
-    
+        </div>
+
+        <!-- graph card-->
+        <div class="card">
+
+            <h3>System Response</h3>
+
+            <div id="responseGraph"></div>
+
+        </div>
+
+    </div>
+
+</div>
+ 
 <script>
     //get the sliders and input selector 
     const gainSlider = document.getElementById("gain");
