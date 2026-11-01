@@ -119,6 +119,80 @@
                 padding: 18px;
             }
         }
+
+           /* NEW: styles for the remaining Module 1 features */
+
+        .extra-card {
+            margin-top: 25px;
+        }
+
+        .extra-card p {
+            line-height: 1.6;
+        }
+
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 16px;
+        }
+
+        .prediction-grid label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .prediction-grid input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .action-button {
+            margin-top: 16px;
+            background: #3478c0;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 11px 18px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .action-button:hover {
+            background: #235d99;
+        }
+
+        .feedback {
+            margin-top: 16px;
+            padding: 14px;
+            background: #eef5ff;
+            border-radius: 8px;
+            line-height: 1.7;
+        }
+
+        .feedback[hidden] {
+            display: none;
+        }
+
+        .error-message {
+            color: #b42318;
+            font-weight: bold;
+        }
+
+        .success-message {
+            color: #18794e;
+            font-weight: bold;
+        }
+
+        #errorGraph {
+            width: 100%;
+            height: 400px;
+        }
+
+        
     </style>
 </head>
 
@@ -129,7 +203,6 @@
     <!-- Page header  --> 
     <div class="header">
         <h1>Dynamic Characteristics Toolkit</h1>
-
         <h2>Module 1: First-Order Time Response</h2>
 
         <p>
@@ -224,7 +297,129 @@
     </div>
 
 </div>
- 
+
+
+ <div class="card extra-card" id="errorCard">
+
+        <h3>Logarithmic Error-Fraction Plot</h3>
+
+        <p>
+            For a unit step, the normalized error fraction is
+            E(t) = (K − y(t))/K = exp(−t/τ).
+            The vertical axis uses a logarithmic scale.
+        </p>
+
+        <p>
+            Slope of <strong>ln(E(t))</strong> versus time:
+            <strong>
+                <span id="errorSlope">−1.000</span> s⁻¹
+            </strong>
+        </p>
+
+        <div id="errorGraph"></div>
+
+    </div>
+
+
+    <!-- NEW: Predict, Then Check -->
+    <div class="card extra-card">
+
+        <h3>Predict, Then Check</h3>
+
+        <p>
+            Choose a time between 0 and 30 seconds,
+            predict the system output at that time,
+            then check your prediction against the model.
+            Your prediction is not revealed until you
+            click Check Prediction.
+        </p>
+
+        <div class="prediction-grid">
+
+            <div>
+
+                <label for="predictionTime">
+                    Time t (seconds)
+                </label>
+
+                <input
+                    type="number"
+                    id="predictionTime"
+                    min="0"
+                    max="30"
+                    step="any"
+                    value="2"
+                >
+
+            </div>
+
+            <div>
+
+                <label for="predictedOutput">
+                    Your predicted output y(t)
+                </label>
+
+                <input
+                    type="number"
+                    id="predictedOutput"
+                    step="any"
+                    placeholder="Enter your prediction"
+                >
+
+            </div>
+
+        </div>
+
+        <button
+            type="button"
+            class="action-button"
+            id="checkPrediction"
+        >
+            Check Prediction
+        </button>
+
+        <div
+            class="feedback"
+            id="predictionFeedback"
+            role="status"
+            aria-live="polite"
+            hidden
+        ></div>
+
+    </div>
+
+
+    <!-- NEW: Validation Checks -->
+    <div class="card extra-card">
+
+        <h3>Validation Checks</h3>
+
+        <p>
+            Check the current parameters and verify
+            the response against known first-order
+            system properties.
+        </p>
+
+        <button
+            type="button"
+            class="action-button"
+            id="runValidation"
+        >
+            Run Validation Checks
+        </button>
+
+        <div
+            class="feedback"
+            id="validationFeedback"
+            role="status"
+            aria-live="polite"
+            hidden
+        ></div>
+
+    </div>
+
+</div>
+
 <script>
     //get the sliders and input selector 
     const gainSlider = document.getElementById("gain");
@@ -342,8 +537,541 @@
             layout,
             { responsive: true }
         );
+
+        // update the logarithmic error plot
+        updateErrorGraph(time, tau, inputType);
                 
     }
+
+    
+    // Logarithmic error-fraction plot
+
+    function updateErrorGraph(time, tau, inputType) {
+
+        const errorCard =
+            document.getElementById("errorCard");
+
+        if (inputType !== "step") {
+
+            errorCard.style.display = "none";
+            return;
+
+        }
+
+        errorCard.style.display = "block";
+
+
+        // Calculate normalized error fraction
+        const errorFraction = time.map(
+            t => Math.exp(-t / tau)
+        );
+
+
+        // Calculate the natural-log slope
+        const slope = -1 / tau;
+
+        document.getElementById("errorSlope").textContent =
+            slope.toFixed(3);
+
+
+        const errorTrace = {
+
+            x: time,
+            y: errorFraction,
+
+            mode: "lines",
+            name: "Normalized Error Fraction",
+
+            line: {
+                color: "purple",
+                width: 3
+            }
+
+        };
+
+
+        const errorLayout = {
+
+            title: "Normalized Error Fraction vs Time",
+
+            xaxis: {
+                title: "Time (seconds)"
+            },
+
+            yaxis: {
+                title: "Error Fraction (log scale)",
+                type: "log"
+            },
+
+            margin: {
+                l: 80,
+                r: 30,
+                t: 60,
+                b: 70
+            }
+
+        };
+
+
+        Plotly.react(
+            "errorGraph",
+            [errorTrace],
+            errorLayout,
+            { responsive: true }
+        );
+
+    }
+
+
+    // Shared Model Formula
+
+    function calculateOutput(t, k, tau, inputType) {
+
+        if (inputType === "step") {
+            return k * (1 - Math.exp(-t / tau));
+        }
+
+        return k * (
+            t - tau * (1 - Math.exp(-t / tau))
+        );
+    }
+
+
+    // Input Validation
+    function getCurrentParameters() {
+
+        const k = Number(gainSlider.value);
+        const tau = Number(tauSlider.value);
+        const inputType = inputSelector.value;
+
+
+        if ( !Number.isFinite(k) ||k < 0.5 || k > 5) {
+            return {
+                error: "Gain K must be between 0.5 and 5."
+            };
+        }
+        
+        if (  !Number.isFinite(tau) ||tau < 0.1 || tau > 10 ) {
+          return {
+                error:
+                    "Time constant τ must be between 0.1 and 10 seconds."
+            };
+        }
+
+
+        if ( inputType !== "step" && inputType !== "ramp" ) {
+
+            return {
+                error:
+                    "Please select Step Input or Ramp Input."
+            };
+        }
+
+
+        return {
+            k,
+            tau,
+            inputType
+        };
+
+    }
+
+
+    //  predict, then check
+
+    document.getElementById("checkPrediction")
+        .addEventListener("click", function () {
+
+            const feedback =
+                document.getElementById("predictionFeedback");
+
+            feedback.hidden = false;
+
+
+            const params = getCurrentParameters();
+
+            if (params.error) {
+
+                feedback.textContent = params.error;
+                feedback.className =
+                    "feedback error-message";
+
+                return;
+
+            }
+
+
+            const timeField =
+                document.getElementById("predictionTime");
+
+            const guessField =
+                document.getElementById("predictedOutput");
+
+
+            const t = Number(timeField.value);
+            const guess = Number(guessField.value);
+
+
+            // Validate time
+            if (
+                timeField.value.trim() === "" ||
+                !Number.isFinite(t) ||
+                t < 0 ||
+                t > 30
+            ) {
+
+                feedback.textContent =
+                    "Enter a valid time between 0 and 30 seconds.";
+
+                feedback.className =
+                    "feedback error-message";
+
+                return;
+
+            }
+
+
+            // Validate prediction
+            if (
+                guessField.value.trim() === "" ||
+                !Number.isFinite(guess)
+            ) {
+
+                feedback.textContent =
+                    "Enter a finite numeric prediction before checking.";
+
+                feedback.className =
+                    "feedback error-message";
+
+                return;
+
+            }
+
+
+            // Calculate actual model output
+            const actual = calculateOutput(
+                t,
+                params.k,
+                params.tau,
+                params.inputType
+            );
+
+
+            // Calculate prediction error
+            const absoluteError = Math.abs(
+                guess - actual
+            );
+
+
+            // Prediction tolerance
+            const tolerance = Math.max(
+                0.05,
+                Math.abs(actual) * 0.05
+            );
+
+
+            const close =
+                absoluteError <= tolerance;
+
+
+            feedback.className =
+                "feedback " +
+                (close ? "success-message" : "");
+
+
+            feedback.textContent =
+
+                (close
+                    ? "Good prediction! "
+                    : "Try adjusting your prediction. ") +
+
+                "Model output at t = " +
+                t.toFixed(2) +
+                " s: " +
+                actual.toFixed(4) +
+
+                " | Your prediction: " +
+                guess.toFixed(4) +
+
+                " | Absolute difference: " +
+                absoluteError.toFixed(4) +
+
+                " | Within tolerance: " +
+                (close ? "Yes" : "No");
+
+        });
+
+
+    // Mathematical validation cchecks
+
+    document.getElementById("runValidation")
+        .addEventListener("click", function () {
+
+            const feedback =
+                document.getElementById("validationFeedback");
+
+            feedback.hidden = false;
+
+
+            const params = getCurrentParameters();
+
+            if (params.error) {
+
+                feedback.className =
+                    "feedback error-message";
+
+                feedback.textContent = params.error;
+
+                return;
+
+            }
+
+
+            const { k, tau, inputType } = params;
+
+
+            const near = (
+                a,
+                b,
+                tolerance = 1e-8
+            ) => Math.abs(a - b) <= tolerance;
+
+
+            const checks = [
+
+                [
+                    "Valid K and τ ranges",
+                    true
+                ],
+
+                [
+                    "Zero initial output y(0) = 0",
+
+                    near(
+                        calculateOutput(
+                            0,
+                            k,
+                            tau,
+                            inputType
+                        ),
+                        0
+                    )
+                ]
+
+            ];
+
+
+            if (inputType === "step") {
+
+                // Check 63.2% point
+                checks.push([
+
+                    "At τ, output is 63.2% of K",
+
+                    near(
+
+                        calculateOutput(
+                            tau,
+                            k,
+                            tau,
+                            "step"
+                        ) / k,
+
+                        1 - Math.exp(-1)
+
+                    )
+
+                ]);
+
+
+                // Check 95% point
+                checks.push([
+
+                    "At 3τ, output is 95.0% of K",
+
+                    near(
+                        calculateOutput(
+                            3 * tau,
+                            k,
+                            tau,
+                            "step"
+                        ) / k,
+                        1 - Math.exp(-3)
+                    )
+                ]);
+
+
+                // Check output range
+                checks.push([
+
+                    "Step output stays between 0 and K",
+
+                    [0, tau, 3 * tau, 30].every(t => {
+                        const y = calculateOutput(
+                            t,
+                            k,
+                            tau,
+                            "step"
+                        );
+                        return (
+                            y >= -1e-8 &&
+                            y <= k + 1e-8
+                        );
+                    })
+                ]);
+
+            } else {
+
+                //  Check ramp response at tau
+                checks.push([
+
+                    "Ramp output at t = τ matches its analytical formula",
+
+                    near(
+
+                        calculateOutput(
+                            tau,
+                            k,
+                            tau,
+                            "ramp"
+                        ),
+
+                        k * tau * Math.exp(-1)
+
+                    )
+
+                ]);
+
+
+                // C heck steady-state tracking error
+                checks.push([
+
+                    "Ramp steady-state tracking error tends to Kτ",
+
+                    near(
+
+                        k * 100 * tau -
+                        calculateOutput(
+                            100 * tau,
+                            k,
+                            tau,
+                            "ramp"
+                        ),
+
+                        k * tau,
+
+                        1e-6
+
+                    )
+
+                ]);
+
+
+                // Check nonnegative ramp output
+                checks.push([
+
+                    "Ramp output is nonnegative for t ≥ 0",
+
+                    [0, tau, 3 * tau, 30].every(t => {
+
+                        return calculateOutput(
+                            t,
+                            k,
+                            tau,
+                            "ramp"
+                        ) >= -1e-8;
+
+                    })
+
+                ]);
+
+            }
+
+
+            // Count passed checks
+            const passed = checks.filter(
+                ([, ok]) => ok
+            ).length;
+
+
+            feedback.className =
+                "feedback " +
+                (
+                    passed === checks.length
+                        ? "success-message"
+                        : "error-message"
+                );
+
+
+            feedback.replaceChildren();
+
+
+            const heading =
+                document.createElement("strong");
+
+            heading.textContent =
+                passed +
+                " / " +
+                checks.length +
+                " checks passed";
+
+            feedback.appendChild(heading);
+
+
+            const list =
+                document.createElement("ul");
+
+
+            checks.forEach(([label, ok]) => {
+
+                const item =
+                    document.createElement("li");
+
+                item.textContent =
+                    (ok ? "PASS: " : "FAIL: ") +
+                    label;
+
+                list.appendChild(item);
+
+            });
+
+
+            feedback.appendChild(list);
+
+        });
+
+
+    //Reset feedback when controls change
+
+    function resetExtraFeedback() {
+
+        document.getElementById(
+            "predictionFeedback"
+        ).hidden = true;
+
+        document.getElementById(
+            "validationFeedback"
+        ).hidden = true;
+
+    }
+
+
+    gainSlider.addEventListener(
+        "input",
+        resetExtraFeedback
+    );
+
+    tauSlider.addEventListener(
+        "input",
+        resetExtraFeedback
+    );
+
+    inputSelector.addEventListener(
+        "change",
+        resetExtraFeedback
+    );
+
+
     //update graph whenever a slider changes
     gainSlider.addEventListener("input", updateGraph);
     tauSlider.addEventListener("input", updateGraph);
