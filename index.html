@@ -198,6 +198,27 @@
 
             <div id="responseGraph"></div>
 
+            <div id="rampAnalysis" style="display: none; margin-top: 20px;">
+        
+            <h3>Ramp Analysis</h3>
+        
+            <p>
+                Time Constant:
+                <strong><span id="rampTau">0</span> s</strong>
+            </p>
+        
+            <p>
+                Asymptotic Ramp Lag:
+                <strong><span id="rampLag">0</span> s</strong>
+            </p>
+        
+            <p>
+                Steady-State Tracking Error:
+                <strong><span id="rampError">0</span></strong>
+            </p>
+        
+        </div>
+
         </div>
 
     </div>
@@ -217,6 +238,32 @@
 
         document.getElementById("gainValue").textContent = k.toFixed(1);
         document.getElementById("tauValue").textContent = tau.toFixed(1);
+
+        // Ramp analysis
+        const rampAnalysis = document.getElementById("rampAnalysis");
+        
+        if (inputType === "ramp") {
+        
+            rampAnalysis.style.display = "block";
+        
+            // Calculate ramp lag and steady-state error
+            const rampLag = tau;
+            const steadyStateError = k * tau;
+        
+            document.getElementById("rampTau").textContent =
+                tau.toFixed(2);
+        
+            document.getElementById("rampLag").textContent =
+                rampLag.toFixed(2);
+        
+            document.getElementById("rampError").textContent =
+                steadyStateError.toFixed(2);
+        
+        } else {
+        
+            rampAnalysis.style.display = "none";
+        
+        }
 
         let time = [];
         let output = [];
