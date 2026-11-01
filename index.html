@@ -257,6 +257,24 @@
         name: "Output y(t)",
         line: { color: "red", width: 3 }
         };
+
+        // Calculate the important step-response points
+        const yTau = k * (1 - Math.exp(-1));
+        const y3Tau = k * (1 - Math.exp(-3));
+        
+        // Markers for the step response
+        const markersTrace = {
+            x: [tau, 3 * tau],
+            y: [yTau, y3Tau],
+            mode: "markers+text",
+            name: "Response Markers",
+            marker: {
+                color: "green",
+                size: 12
+            },
+            text: ["63.2%", "95%"],
+            textposition: "top center"
+        };
         const layout = {
             title: "First-Order System Response",
             xaxis: { title: "Time (seconds)" },
@@ -264,13 +282,20 @@
             legend: { orientation: "h" },
             margin: { t: 60, b: 60 }
         };
+
+        const traces = [inputTrace, outputTrace];
+        
+        if (inputType === "step") {
+            traces.push(markersTrace);
+        }
+        
         Plotly.react(
             "responseGraph",
-            [inputTrace, outputTrace],
+            traces,
             layout,
             { responsive: true }
         );
-        
+                
     }
     //update graph whenever a slider changes
     gainSlider.addEventListener("input", updateGraph);
