@@ -847,30 +847,15 @@
             const { k, tau, inputType } = params;
 
 
-            const near = (
-                a,
-                b,
-                tolerance = 1e-8
+            const near = ( a,  b,  tolerance = 1e-8
             ) => Math.abs(a - b) <= tolerance;
 
 
             const checks = [
 
-                [
-                    "Valid K and τ ranges",
-                    true
-                ],
+                [  "Valid K and τ ranges", true ], [ "Zero initial output y(0) = 0",
 
-                [
-                    "Zero initial output y(0) = 0",
-
-                    near(
-                        calculateOutput(
-                            0,
-                            k,
-                            tau,
-                            inputType
-                        ),
+                    near(calculateOutput( 0, k,tau,  inputType  ),
                         0
                     )
                 ]
@@ -885,36 +870,15 @@
 
                     "At τ, output is 63.2% of K",
 
-                    near(
-
-                        calculateOutput(
-                            tau,
-                            k,
-                            tau,
-                            "step"
-                        ) / k,
-
-                        1 - Math.exp(-1)
-
-                    )
+                    near(  calculateOutput(tau, k,tau,"step") / k,   1 - Math.exp(-1))
 
                 ]);
 
 
                 // Check 95% point
                 checks.push([
-
                     "At 3τ, output is 95.0% of K",
-
-                    near(
-                        calculateOutput(
-                            3 * tau,
-                            k,
-                            tau,
-                            "step"
-                        ) / k,
-                        1 - Math.exp(-3)
-                    )
+                    near(calculateOutput(3 * tau,k,tau,"step") / k,1 - Math.exp(-3)  )
                 ]);
 
 
@@ -924,12 +888,7 @@
                     "Step output stays between 0 and K",
 
                     [0, tau, 3 * tau, 30].every(t => {
-                        const y = calculateOutput(
-                            t,
-                            k,
-                            tau,
-                            "step"
-                        );
+                        const y = calculateOutput(t,k,tau,"step");
                         return (
                             y >= -1e-8 &&
                             y <= k + 1e-8
@@ -944,18 +903,7 @@
 
                     "Ramp output at t = τ matches its analytical formula",
 
-                    near(
-
-                        calculateOutput(
-                            tau,
-                            k,
-                            tau,
-                            "ramp"
-                        ),
-
-                        k * tau * Math.exp(-1)
-
-                    )
+                    near( calculateOutput(tau,k,tau,"ramp"),    k * tau * Math.exp(-1))
 
                 ]);
 
@@ -965,22 +913,8 @@
 
                     "Ramp steady-state tracking error tends to Kτ",
 
-                    near(
-
-                        k * 100 * tau -
-                        calculateOutput(
-                            100 * tau,
-                            k,
-                            tau,
-                            "ramp"
-                        ),
-
-                        k * tau,
-
-                        1e-6
-
-                    )
-
+                    near( k * 100 * tau -
+                        calculateOutput(100 * tau,k,tau,"ramp"), k * tau, 1e-6  )
                 ]);
 
 
@@ -988,15 +922,8 @@
                 checks.push([
 
                     "Ramp output is nonnegative for t ≥ 0",
-
                     [0, tau, 3 * tau, 30].every(t => {
-
-                        return calculateOutput(
-                            t,
-                            k,
-                            tau,
-                            "ramp"
-                        ) >= -1e-8;
+                        return calculateOutput(t,k, tau, "ramp") >= -1e-8;
 
                     })
 
