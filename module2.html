@@ -378,28 +378,13 @@
 
             // Graph layout
             const layout = {
-                title: "",
+                xaxis: { title: "Time (s)" },
 
-                xaxis: {
-                    title: "Time (s)"
-                },
+                yaxis: { title: "Amplitude", range: [-1.2, 1.2]  },
 
-                yaxis: {
-                    title: "Amplitude",
-                    range: [-1.2, 1.2]
-                },
+                legend: { orientation: "h", y: -0.25 },
 
-                legend: {
-                    orientation: "h",
-                    y: -0.25
-                },
-
-                margin: {
-                    t: 55,
-                    b: 85,
-                    l: 60,
-                    r: 20
-                }
+                margin: { t: 20, b: 85,l: 60, r: 20 }
             };
 
 
