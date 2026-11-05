@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 
@@ -207,6 +206,73 @@
         .back-button:hover {
             background-color: #235d99;
         }
+        .frequency-results {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .result-box {
+            background: #f4f7fb;
+            padding: 18px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .result-box h4 {
+            color: #17365d;
+            font-size: 15px;
+            margin: 0 0 10px;
+        }
+
+        .result-box p {
+            color: #3478c0;
+            font-size: 25px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .result-box small {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 700px) {
+            .frequency-results {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* Additional plot sections */
+        .bode-graph {
+            width: 100%;
+            min-height: 310px;
+        }
+
+        .plot-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .plot-info-box {
+            background: #f4f7fb;
+            padding: 18px;
+            border-radius: 10px;
+            line-height: 1.6;
+        }
+
+        .plot-info-box h4 {
+            color: #17365d;
+            margin-top: 0;
+        }
+
+        @media (max-width: 1100px) {
+            .frequency-results {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -222,9 +288,7 @@
     <div class="header">
 
         <h1>Dynamic Characteristics Toolkit</h1>
-
         <h2>Module 2: First-Order Frequency Response</h2>
-
         <p>
             Explore how time constant (τ) and input frequency (ω)
             affect the amplitude and phase of a first-order system.
@@ -236,21 +300,18 @@
     <div class="card model-card">
 
         <h3>System Model</h3>
-
         <p>G(s) = 1 / (τs + 1)</p>
 
     </div>
 
     <!-- Main dashboard -->
     <div class="dashboard">
-
         <!-- Controls card -->
         <div class="card">
 
             <h3>Controls</h3>
 
             <div class="control-group">
-
                 <label for="tau">
                     Time Constant (τ):
                     <span id="tauValue">1.0</span> s
@@ -264,7 +325,6 @@
                     step="0.1"
                     value="1"
                 >
-
             </div>
 
             <div class="control-group">
@@ -282,52 +342,91 @@
                     step="0.1"
                     value="1"
                 >
-
             </div>
 
+            <!-- Live frequency response values -->
+            <!-- These values update with the same sliders -->
+            <div class="frequency-results">
+                <div class="result-box">
+                    <h4>Amplitude Ratio (M)</h4>
+                    <p id="amplitudeValue">0.707</p>
+                    <small>Output amplitude compared to input.</small>
+                </div>
+
+                <div class="result-box">
+                    <h4>Phase Lag (φ)</h4>
+                    <p id="phaseValue">-45.0°</p>
+                    <small>How much the output lags behind the input.</small>
+                </div>
+            </div>
         </div>
 
         <!-- Graph card -->
         <div class="card">
-
             <h3>Input and Output Sine Waves</h3>
 
             <div id="responseGraph"></div>
-
         </div>
-
     </div>
 
-</div>
+    <!-- Frequency-domain graphs -->
+    <div class="card extra-card">
+        <h3>Bode Plots — Frequency Response</h3>
+        <p>Explore how amplitude and phase change across frequencies.</p>
+        <p><strong>Cutoff Frequency:</strong> <span id="cutoffValue">1.00</span> rad/s</p>
 
+        <h4>Magnitude Response</h4>
+        <div id="magnitudeGraph" class="bode-graph"></div>
+
+        <h4>Phase Response</h4>
+        <div id="phaseGraph" class="bode-graph"></div>
+    </div>
+
+    <!-- Short explanation of the three plots -->
+    <div class="card extra-card">
+        <h3>Understanding the Plots</h3>
+        <div class="plot-info-grid">
+            <div class="plot-info-box">
+                <h4>Time Domain — Sine Waves</h4>
+                <p><strong>X-axis:</strong> Time (s)</p>
+                <p><strong>Y-axis:</strong> Signal Amplitude</p>
+                <p>Shows how input and output signals change over time.</p>
+            </div>
+
+            <div class="plot-info-box">
+                <h4>Frequency Domain — Bode Plots</h4>
+                <p><strong>X-axis:</strong> Frequency (rad/s)</p>
+                <p><strong>Y-axis:</strong> Magnitude (dB) / Phase (°)</p>
+                <p>Shows how the system changes amplitude and phase across frequencies.</p>
+            </div>
+        </div>
+    </div>
+</div>
     <script>
 
-        // Get HTML elements
-        const tauSlider = document.getElementById("tau");
+        const tauSlider = document.getElementById("tau");  // Get HTML elements
         const frequencySlider = document.getElementById("frequency");
 
         const tauValue = document.getElementById("tauValue");
         const frequencyValue = document.getElementById("frequencyValue");
 
-
         // Update graph whenever a slider changes
         function updateGraph() {
-
-            // Read slider values
-            const tau = parseFloat(tauSlider.value);
+            const tau = parseFloat(tauSlider.value);// Read slider values
             const omega = parseFloat(frequencySlider.value);
 
-            // Display current slider values
-            tauValue.textContent = tau.toFixed(1);
+            tauValue.textContent = tau.toFixed(1);// Display current slider values
             frequencyValue.textContent = omega.toFixed(1);
-
 
             // Calculate amplitude ratio and phase lag
             const amp = 1 / Math.sqrt(1 + Math.pow(omega * tau, 2));
             const phase = -Math.atan(omega * tau); //negative bc output lags behind the input in phase because a First-Order Low-Pass sys
+            const phaseDegrees = phase * (180 / Math.PI);// Convert phase from radians to degrees
 
+            document.getElementById("amplitudeValue").textContent = amp.toFixed(3);// Display amplitude ratio and phase lag
 
-            // Generate time and signal values
+            document.getElementById("phaseValue").textContent = phaseDegrees.toFixed(1) + "°";
+
             const time = [];
             const input = [];
             const output = [];
@@ -337,9 +436,7 @@
             const points = 300;
 
             for (let i = 0; i <= points; i++) {
-
                 const t = (i / points) * totalTime;
-
                 const x = Math.sin(omega * t);
                 const y = amp * Math.sin(omega * t + phase); 
 
@@ -348,46 +445,31 @@
                 output.push(y);
             }
 
-
             // Input sine wave
             const inputTrace = {
-                x: time,
-                y: input,
-                mode: "lines",
-                name: "Input x(t)",
+                x: time, y: input, mode: "lines", name: "Input x(t)",
                 line: {
                     color: "#3478c0",
                     width: 2,
                     dash: "dash"
                 }
             };
-
-
             // Output sine wave
             const outputTrace = {
-                x: time,
-                y: output,
-                mode: "lines",
-                name: "Output y(t)",
+                x: time, y: output, mode: "lines", name: "Output y(t)",
                 line: {
                     color: "#d94c55",
                     width: 3
                 }
             };
 
-
             // Graph layout
             const layout = {
                 xaxis: { title: "Time (s)" },
-
                 yaxis: { title: "Amplitude", range: [-1.2, 1.2]  },
-
                 legend: { orientation: "h", y: -0.25 },
-
                 margin: { t: 20, b: 85,l: 60, r: 20 }
             };
-
-
             // Draw or update graph
             Plotly.react(
                 "responseGraph",
@@ -396,18 +478,73 @@
                 { responsive: true }
             );
 
+            updateBodePlots(tau, omega, amp, phaseDegrees);// Update both frequency-domain plots
         }
 
+        function updateBodePlots(tau, omega, amp, phaseDegrees) {
+        // Reuse one plotting function for Magnitude and Phase.
+            const cutoff = 1 / tau;
+            document.getElementById("cutoffValue").textContent = cutoff.toFixed(2);
 
-        // Update graph when sliders move
-        tauSlider.addEventListener("input", updateGraph);
+            const frequencies = [];
+            const magnitudes = [];
+            const phases = [];
+
+            // Logarithmic frequency range: 0.001 to 1000 rad/s
+            for (let i = 0; i <= 200; i++) {
+                const w = Math.pow(10, -3 + 6 * i / 200);
+                const magnitude = 1 / Math.sqrt(1 + Math.pow(w * tau, 2));
+
+                frequencies.push(w);
+                magnitudes.push(20 * Math.log10(magnitude));
+                phases.push(-Math.atan(w * tau) * 180 / Math.PI);
+            }
+
+            const cutoffLine = {
+                type: "line",
+                x0: cutoff,
+                x1: cutoff,
+                y0: 0,
+                y1: 1,
+                yref: "paper",
+                line: { color: "#24966b", width: 2, dash: "dash" }
+            };
+
+            // Only the y-values and labels differ between the two plots.
+            function drawBode(graphId, values, selectedValue, axisTitle) {
+                const curve = {
+                    x: frequencies,
+                    y: values,
+                    mode: "lines",
+                    name: axisTitle,
+                    line: { color: "#3478c0", width: 3 }
+                };
+
+                const marker = {
+                    x: [omega],
+                    y: [selectedValue],
+                    mode: "markers",
+                    name: "Selected Frequency",
+                    marker: { color: "#d94c55", size: 10 }
+                };
+
+                const layout = {
+                    xaxis: { title: "Frequency (rad/s)", type: "log" },
+                    yaxis: { title: axisTitle },
+                    shapes: [cutoffLine],
+                    legend: { orientation: "h", y: -0.3 },
+                    margin: { t: 20, b: 90, l: 70, r: 20 }
+                };
+                Plotly.react(graphId, [curve, marker], layout, { responsive: true });
+            }
+            drawBode("magnitudeGraph", magnitudes, 20 * Math.log10(amp), "Magnitude (dB)");
+            drawBode("phaseGraph", phases, phaseDegrees, "Phase (degrees)");
+        }
+
+        tauSlider.addEventListener("input", updateGraph);// Update graph when sliders move
         frequencySlider.addEventListener("input", updateGraph);
-
-
-        // Draw graph when page first loads
         updateGraph();
 
     </script>
-
 </body>
 </html>
