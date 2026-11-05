@@ -1,119 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Characteristics Toolkit - Module 2</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
     <style>
-        * {
-            box-sizing: border-box;
+        /* ========== 1. Base ========== */
+        /* Colors live here, so you can change the theme in one place */
+        :root {
+            --navy: #17365d;
+            --blue: #3478c0;
+            --blue-dark: #235d99;
+            --gray: #64748b;
+            --bg: #f4f7fb;
+            --text: #243047;
         }
+        * { box-sizing: border-box; }
         body {
-            margin: 0; 
+            margin: 0;
             font-family: Arial, sans-serif;
-            background-color: #f4f7fb;
-            color: #243047;
+            background: var(--bg);
+            color: var(--text);
         }
         .container {
             max-width: 1250px;
             margin: 0 auto;
             padding: 35px 25px;
         }
-        .header {
-            text-align: center;
-            margin-bottom: 35px;
-        }
-        .header h1 {
-            color: #17365d;
-            font-size: 36px;
-            margin-bottom: 12px;
-        }
-        .header h2 {
-            color: #3478c0;
-            font-size: 24px;
-        }
-        .header p {
-            color: #64748b;
-            font-size: 16px;
-        }
-        .dashboard {
-            display: grid;
-            grid-template-columns: 300px minmax(0, 1fr);
-            gap: 25px;
-            align-items: start;
-        }
+
+        /* ========== 2. Header ========== */
+        .header { text-align: center; margin-bottom: 35px; }
+        .header h1 { color: var(--navy); font-size: 36px; margin-bottom: 12px; }
+        .header h2 { color: var(--blue); font-size: 24px; }
+        .header p  { color: var(--gray); font-size: 16px; }
+
+        /* ========== 3. Cards and layout ========== */
         .card {
             background: white;
             border-radius: 15px;
             padding: 25px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
         }
-        .card h3 {
-            margin-top: 0 ;
-            color:  #17365d;
+        .card h3 { margin-top: 0; color: var(--navy); }
+        .model-card { margin-bottom: 25px; text-align: center; }
+        .model-card p { font-size: 20px; }
+        .extra-card { margin-top: 25px; }
+        .extra-card p { line-height: 1.6; }
+
+        /* Controls on the left, graph on the right */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 300px minmax(0, 1fr);
+            gap: 25px;
+            align-items: start;
         }
-        .control-group {
-             margin-bottom: 25px;
-        }
-        .control-group label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 12px;
-        }
-        input[type="range"] {
-            width: 100%;
-            accent-color: #3478c0;
-            cursor: pointer;
-        }
-        select {
-            width: 100%;
+
+        /* ========== 4. Controls ========== */
+        .control-group { margin-bottom: 25px; }
+        .control-group label { display: block; font-weight: bold; margin-bottom: 12px; }
+        input[type="range"] { width: 100%; accent-color: var(--blue); cursor: pointer; }
+
+        /* Shared style for all inputs, dropdowns and buttons */
+        input, select {
             padding: 10px;
             border: 1px solid #cbd5e1;
             border-radius: 8px;
-            background: white;
             font-size: 15px;
         }
-        .model-card {
-            margin-bottom: 25px;
-            text-align: center;
+        select { width: 100%; background: white; }
+        .extra-card input, .extra-card select { margin: 6px 8px 6px 0; }
+        .extra-card input { width: 110px; }
+        .extra-card select { width: auto; }
+        button {
+            background: var(--blue);
+            color: white;
+            border: 0;
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
         }
-        .model-card p {
-            font-size: 20px;
-        }
-        #responseGraph {
-            width: 100%;
-            height: 450px;
-        }
-        @media (max-width: 850px) {
-            .dashboard {
-                grid-template-columns: 1fr;
-            }
-            .container {
-                padding: 20px 12px;
-            }
-            .header h1 {
-                font-size: 27px;
-            }
-            .card {
-                padding: 18px;
-            }
-        }
-        .extra-card {
-            margin-top: 25px;
-        }
-        .extra-card p {
-            line-height: 1.6;
-        }
-        .action-button:hover {
-            background: #235d99;
-        }
-        .feedback[hidden] {
-            display: none;
-        }
+        button:hover { background: var(--blue-dark); }
+
+        /* "Back to Home" link looks like a button */
         .back-button {
             display: inline-block;
-            background-color: #3478c0;
+            background: var(--blue);
             color: white;
             text-decoration: none;
             padding: 10px 18px;
@@ -122,9 +95,9 @@
             font-weight: bold;
             margin-bottom: 20px;
         }
-        .back-button:hover {
-            background-color: #235d99;
-        }
+        .back-button:hover { background: var(--blue-dark); }
+
+        /* ========== 5. Results and graphs ========== */
         .frequency-results {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -132,117 +105,76 @@
             margin-top: 25px;
         }
         .result-box {
-            background: #f4f7fb;
+            background: var(--bg);
             padding: 18px;
             border-radius: 10px;
             text-align: center;
         }
-        .result-box h4 {
-            color: #17365d;
-            font-size: 15px;
-            margin: 0 0 10px;
-        }
-        .result-box p {
-            color: #3478c0;
-            font-size: 25px;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        .result-box small {
-            color: #64748b;
-            font-size: 12px;
-            line-height: 1.5;
-        }
-        @media (max-width: 700px) {
-            .frequency-results {
-                grid-template-columns: 1fr;
-            }
-        }
-        /* Additional plot sections */
-        .bode-graph {
-            width: 100%;
-            min-height: 310px;
-        }
+        .result-box h4 { color: var(--navy); font-size: 15px; margin: 0 0 10px; }
+        .result-box p  { color: var(--blue); font-size: 25px; font-weight: bold; margin: 10px 0; }
+        .result-box small { color: var(--gray); font-size: 12px; line-height: 1.5; }
+
+        #responseGraph { width: 100%; height: 450px; }
+        .bode-graph { width: 100%; min-height: 310px; }
+        .result-text { margin-top: 12px; line-height: 1.7; }
+
         .plot-info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 20px;
         }
         .plot-info-box {
-            background: #f4f7fb;
+            background: var(--bg);
             padding: 18px;
             border-radius: 10px;
             line-height: 1.6;
         }
-        .plot-info-box h4 {
-            color: #17365d;
-            margin-top: 0;
-        }
+        .plot-info-box h4 { color: var(--navy); margin-top: 0; }
+
+        /* ========== 6. Mobile / small screens ========== */
         @media (max-width: 1100px) {
-            .frequency-results {
-                grid-template-columns: 1fr;
-            }
+            .frequency-results { grid-template-columns: 1fr; }
         }
-        .extra-card input, .extra-card select {
-            padding: 9px;
-            margin: 6px 8px 6px 0;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
+        @media (max-width: 850px) {
+            .dashboard { grid-template-columns: 1fr; }
+            .container { padding: 20px 12px; }
+            .header h1 { font-size: 27px; }
+            .card { padding: 18px; }
         }
-        .extra-card input { width: 110px; }
-        .extra-card button {
-            background: #3478c0;
-            color: white;
-            border: 0;
-            border-radius: 8px;
-            padding: 10px 16px;
-            cursor: pointer;
-        }
-        .extra-card button:hover { background: #235d99; }
-        .result-text { margin-top: 12px; line-height: 1.7; }
     </style>
 </head>
+
 <body>
 <div class="container">
-    <!-- Back to Home -->
-    <a href="index.html" class="back-button">
-        ← Back to Home
-    </a>
-    <!-- Page header -->
+
+    <a href="index.html" class="back-button">← Back to Home</a>
+
     <div class="header">
         <h1>Dynamic Characteristics Toolkit</h1>
         <h2>Module 2: First-Order Frequency Response</h2>
-        <p>
-            Explore how time constant (τ) and input frequency (ω)
-            affect the amplitude and phase of a first-order system.
-        </p>
+        <p>Explore how time constant (τ) and input frequency (ω) affect the amplitude and phase of a first-order system.</p>
     </div>
-    <!-- System model -->
+
     <div class="card model-card">
         <h3>System Model</h3>
         <p>G(s) = 1 / (τs + 1)</p>
     </div>
-    <!-- Main dashboard -->
+
+    <!-- Controls + time-domain graph -->
     <div class="dashboard">
-        <!-- Controls card -->
         <div class="card">
             <h3>Controls</h3>
+
             <div class="control-group">
-                <label for="tau">
-                    Time Constant (τ):
-                    <span id="tauValue">1.0</span> s
-                </label>
+                <label for="tau">Time Constant (τ): <span id="tauValue">1.0</span> s</label>
                 <input type="range" id="tau" min="0.1" max="10" step="0.1" value="1">
             </div>
+
             <div class="control-group">
-                <label for="frequency">
-                    Input Frequency (ω):
-                    <span id="frequencyValue">1.0</span> rad/s
-                </label>
+                <label for="frequency">Input Frequency (ω): <span id="frequencyValue">1.0</span> rad/s</label>
                 <input type="range" id="frequency" min="0.1" max="20" step="0.1" value="1">
             </div>
-            <!-- Live frequency response values -->
-            <!-- These values update with the same sliders -->
+
             <div class="frequency-results">
                 <div class="result-box">
                     <h4>Amplitude Ratio (M)</h4>
@@ -256,13 +188,14 @@
                 </div>
             </div>
         </div>
-        <!-- Graph card -->
+
         <div class="card">
             <h3>Input and Output Sine Waves</h3>
             <div id="responseGraph"></div>
         </div>
     </div>
-    <!-- Frequency-domain graphs -->
+
+    <!-- Bode plots -->
     <div class="card extra-card">
         <h3>Bode Plots — Frequency Response</h3>
         <p>Explore how amplitude and phase change across frequencies.</p>
@@ -272,7 +205,8 @@
         <h4>Phase Response</h4>
         <div id="phaseGraph" class="bode-graph"></div>
     </div>
-    <!-- Short explanation of the three plots -->
+
+    <!-- Plot explanation -->
     <div class="card extra-card">
         <h3>Understanding the Plots</h3>
         <div class="plot-info-grid">
@@ -290,6 +224,7 @@
             </div>
         </div>
     </div>
+
     <!-- Dynamic error calculator -->
     <div class="card extra-card">
         <h3>Dynamic Error Calculator</h3>
@@ -299,7 +234,8 @@
         <button id="calcButton">Calculate</button>
         <p id="calcResult" class="result-text" aria-live="polite"></p>
     </div>
-    <!-- Predict before checking the response -->
+
+    <!-- Prediction quiz -->
     <div class="card extra-card">
         <h3>Predict, Then Check</h3>
         <p>Before changing the frequency slider, predict what happens to output amplitude when frequency increases.</p>
@@ -312,184 +248,154 @@
         <button id="predictButton">Check</button>
         <p id="predictionResult" class="result-text" aria-live="polite"></p>
     </div>
-    <!-- Numerical verification -->
+
+    <!-- Validation -->
     <div class="card extra-card">
         <h3>Validation Checks</h3>
         <p>Compare the calculated results with known reference values.</p>
         <button id="validateButton">Run Validation</button>
         <div id="validationResult" class="result-text" aria-live="polite"></div>
     </div>
+
 </div>
-    <script>
-        // Get HTML elements
-        const tauSlider = document.getElementById("tau");
-        const frequencySlider = document.getElementById("frequency");
-        const tauValue = document.getElementById("tauValue");
-        const frequencyValue = document.getElementById("frequencyValue");
-        // Update graph whenever a slider changes
-        function updateGraph() {
-            // Read slider values
-            const tau = parseFloat(tauSlider.value);
-            const omega = parseFloat(frequencySlider.value);
-            // Display current slider values
-            tauValue.textContent = tau.toFixed(1);
-            frequencyValue.textContent = omega.toFixed(1);
-            // Calculate amplitude ratio and phase lag
-            const amp = 1 / Math.sqrt(1 + Math.pow(omega * tau, 2));
-            const phase = -Math.atan(omega * tau); //negative bc output lags behind the input in phase because a First-Order Low-Pass sys
-            // Convert phase from radians to degrees
-            const phaseDegrees = phase * (180 / Math.PI);
-            // Display amplitude ratio and phase lag
-            document.getElementById("amplitudeValue").textContent = amp.toFixed(3);
-            document.getElementById("phaseValue").textContent =
-                phaseDegrees.toFixed(1) + "°";
-            // Generate time and signal values
-            const time = [];
-            const input = [];
-            const output = [];
-            const periods = 3;
-            const totalTime = periods * (2 * Math.PI / omega);
-            const points = 300;
-            for (let i = 0; i <= points; i++) {
-                const t = (i / points) * totalTime;
-                const x = Math.sin(omega * t);
-                const y = amp * Math.sin(omega * t + phase); 
-                time.push(t);
-                input.push(x);
-                output.push(y);
+
+<script>
+    // ========== 1. Helpers ==========
+    const $ = id => document.getElementById(id);   // short for getElementById
+    const toDeg = rad => rad * 180 / Math.PI;
+
+    // ========== 2. Math (first-order system) ==========
+    // Amplitude ratio M = 1 / sqrt(1 + (ωτ)²)
+    const amplitude = (tau, omega) => 1 / Math.sqrt(1 + (omega * tau) ** 2);
+
+    // Phase lag in degrees (positive number)
+    const lagDegrees = (tau, omega) => toDeg(Math.atan(omega * tau));
+
+    // Largest τ that keeps the amplitude error under `error` (0.05 = 5%)
+    const maxTau = (freqHz, error) =>
+        Math.sqrt(1 / (1 - error) ** 2 - 1) / (2 * Math.PI * freqHz);
+
+    // ========== 3. Time-domain graph ==========
+    const colors = { blue: "#3478c0", red: "#d94c55", green: "#24966b" };
+
+    function updateGraph() {
+        const tau = Number($("tau").value);
+        const omega = Number($("frequency").value);
+        const amp = amplitude(tau, omega);
+        const phase = -Math.atan(omega * tau);   // negative = output lags the input
+
+        // Update the numbers on the page
+        $("tauValue").textContent = tau.toFixed(1);
+        $("frequencyValue").textContent = omega.toFixed(1);
+        $("amplitudeValue").textContent = amp.toFixed(3);
+        $("phaseValue").textContent = toDeg(phase).toFixed(1) + "°";
+
+        // Build 3 full periods of the input and output waves
+        const totalTime = 3 * (2 * Math.PI / omega);
+        const time = Array.from({ length: 301 }, (_, i) => (i / 300) * totalTime);
+
+        Plotly.react("responseGraph", [
+            {
+                x: time, y: time.map(t => Math.sin(omega * t)),
+                mode: "lines", name: "Input x(t)",
+                line: { color: colors.blue, width: 2, dash: "dash" }
+            },
+            {
+                x: time, y: time.map(t => amp * Math.sin(omega * t + phase)),
+                mode: "lines", name: "Output y(t)",
+                line: { color: colors.red, width: 3 }
             }
-            // Input sine wave
-            const inputTrace = {
-                x: time,
-                y: input,
-                mode: "lines",
-                name: "Input x(t)",
-                line: {
-                    color: "#3478c0",
-                    width: 2,
-                    dash: "dash"
-                }
-            };
-            // Output sine wave
-            const outputTrace = {
-                x: time,
-                y: output,
-                mode: "lines",
-                name: "Output y(t)",
-                line: {
-                    color: "#d94c55",
-                    width: 3
-                }
-            };
-            // Graph layout
-            const layout = {
-                xaxis: { title: "Time (s)" },
-                yaxis: { title: "Amplitude", range: [-1.2, 1.2]  },
-                legend: { orientation: "h", y: -0.25 },
-                margin: { t: 20, b: 85,l: 60, r: 20 }
-            };
-            // Draw or update graph
-            Plotly.react(
-                "responseGraph",
-                [inputTrace, outputTrace],
-                layout,
-                { responsive: true }
-            );
-            // Update both frequency-domain plots
-            updateBodePlots(tau, omega, amp, phaseDegrees);
-        }
-        // Reuse one plotting function for Magnitude and Phase.
-        function updateBodePlots(tau, omega, amp, phaseDegrees) {
-            const cutoff = 1 / tau;
-            document.getElementById("cutoffValue").textContent = cutoff.toFixed(2);
-            const frequencies = [];
-            const magnitudes = [];
-            const phases = [];
-            // Logarithmic frequency range: 0.001 to 1000 rad/s
-            for (let i = 0; i <= 200; i++) {
-                const w = Math.pow(10, -3 + 6 * i / 200);
-                const magnitude = 1 / Math.sqrt(1 + Math.pow(w * tau, 2));
-                frequencies.push(w);
-                magnitudes.push(20 * Math.log10(magnitude));
-                phases.push(-Math.atan(w * tau) * 180 / Math.PI);
+        ], {
+            xaxis: { title: "Time (s)" },
+            yaxis: { title: "Amplitude", range: [-1.2, 1.2] },
+            legend: { orientation: "h", y: -0.25 },
+            margin: { t: 20, b: 85, l: 60, r: 20 }
+        }, { responsive: true });
+
+        updateBodePlots(tau, omega, amp, toDeg(phase));
+    }
+
+    // ========== 4. Bode plots ==========
+    const freqs = Array.from({ length: 201 }, (_, i) => 10 ** (-3 + 6 * i / 200));
+
+    // One function draws both plots: only the data and the axis title change
+    function drawBode(graphId, values, selectedValue, title, omega, cutoff) {
+        Plotly.react(graphId, [
+            {
+                x: freqs, y: values,
+                mode: "lines", name: title,
+                line: { color: colors.blue, width: 3 }
+            },
+            {
+                x: [omega], y: [selectedValue],
+                mode: "markers", name: "Selected Frequency",
+                marker: { color: colors.red, size: 10 }
             }
-            const cutoffLine = {
-                type: "line",
-                x0: cutoff,
-                x1: cutoff,
-                y0: 0,
-                y1: 1,
-                yref: "paper",
-                line: { color: "#24966b", width: 2, dash: "dash" }
-            };
-            // Only the y-values and labels differ between the two plots.
-            function drawBode(graphId, values, selectedValue, axisTitle) {
-                const curve = {
-                    x: frequencies,
-                    y: values,
-                    mode: "lines",
-                    name: axisTitle,
-                    line: { color: "#3478c0", width: 3 }
-                };
-                const marker = {
-                    x: [omega],
-                    y: [selectedValue],
-                    mode: "markers",
-                    name: "Selected Frequency",
-                    marker: { color: "#d94c55", size: 10 }
-                };
-                const layout = {
-                    xaxis: { title: "Frequency (rad/s)", type: "log" },
-                    yaxis: { title: axisTitle },
-                    shapes: [cutoffLine],
-                    legend: { orientation: "h", y: -0.3 },
-                    margin: { t: 20, b: 90, l: 70, r: 20 }
-                };
-                Plotly.react(graphId, [curve, marker], layout, { responsive: true });
-            }
-            drawBode("magnitudeGraph", magnitudes, 20 * Math.log10(amp), "Magnitude (dB)");
-            drawBode("phaseGraph", phases, phaseDegrees, "Phase (degrees)");
-        }
-        // Update graph when sliders move
-        tauSlider.addEventListener("input", updateGraph);
-        frequencySlider.addEventListener("input", updateGraph);
-        // Draw graph when page first loads
-        updateGraph();
-        // Shared formulas for the calculator and validation tests
-        const amplitude = (tau, omega) => 1 / Math.sqrt(1 + (omega * tau) ** 2);
-        const lagDegrees = (tau, omega) => Math.atan(omega * tau) * 180 / Math.PI;
-        const maxTau = (f, error) =>
-            Math.sqrt(1 / (1 - error) ** 2 - 1) / (2 * Math.PI * f);
-        document.getElementById("calcButton").addEventListener("click", () => {
-            const f = Number(document.getElementById("calcFreq").value);
-            const e = Number(document.getElementById("calcError").value);
-            const valid = f > 0 && e > 0 && e < 100;
-            document.getElementById("calcResult").textContent = valid
-                ? `Maximum τ = ${(maxTau(f, e / 100) * 1000).toFixed(3)} ms`
-                : "Please enter a positive frequency and an error between 0% and 100%.";
-        });
-        document.getElementById("predictButton").addEventListener("click", () => {
-            const choice = document.getElementById("prediction").value;
-            document.getElementById("predictionResult").textContent = !choice
-                ? "Choose an answer first."
-                : choice === "decrease"
-                    ? "Correct! Higher frequency reduces the output amplitude."
-                    : "Not quite. A first-order low-pass system attenuates higher frequencies.";
-        });
-        document.getElementById("validateButton").addEventListener("click", () => {
-            const tau = maxTau(100, 0.05);
-            const checks = [
-                ["Amplitude ratio", amplitude(0.2, 2), 0.93, 0.01, ""],
-                ["Phase lag", lagDegrees(0.2, 2), 21.8, 0.2, "°"],
-                ["Maximum τ", tau * 1000, 0.52, 0.02, " ms"],
-                ["Phase lag at 50 Hz", lagDegrees(tau, 2 * Math.PI * 50), 9.3, 0.2, "°"]
-            ];
-            document.getElementById("validationResult").innerHTML = checks.map(
-                ([name, actual, expected, tolerance, unit]) =>
-                    `<p>${name}: Expected ${expected}${unit} | Calculated ${actual.toFixed(3)}${unit} — ` +
-                    (Math.abs(actual - expected) <= tolerance ? "PASS" : "FAIL") + `</p>`
-            ).join("");
-        });
+        ], {
+            xaxis: { title: "Frequency (rad/s)", type: "log" },
+            yaxis: { title },
+            // Vertical dashed line at the cutoff frequency
+            shapes: [{
+                type: "line", x0: cutoff, x1: cutoff, y0: 0, y1: 1, yref: "paper",
+                line: { color: colors.green, width: 2, dash: "dash" }
+            }],
+            legend: { orientation: "h", y: -0.3 },
+            margin: { t: 20, b: 90, l: 70, r: 20 }
+        }, { responsive: true });
+    }
+
+    function updateBodePlots(tau, omega, amp, phaseDeg) {
+        const cutoff = 1 / tau;
+        $("cutoffValue").textContent = cutoff.toFixed(2);
+
+        drawBode("magnitudeGraph",
+            freqs.map(w => 20 * Math.log10(amplitude(tau, w))),
+            20 * Math.log10(amp), "Magnitude (dB)", omega, cutoff);
+
+        drawBode("phaseGraph",
+            freqs.map(w => -lagDegrees(tau, w)),
+            phaseDeg, "Phase (degrees)", omega, cutoff);
+    }
+
+    // ========== 5. Dynamic error calculator ==========
+    $("calcButton").addEventListener("click", () => {
+        const f = Number($("calcFreq").value);
+        const e = Number($("calcError").value);
+        const valid = f > 0 && e > 0 && e < 100;
+
+        $("calcResult").textContent = valid
+            ? `Maximum τ = ${(maxTau(f, e / 100) * 1000).toFixed(3)} ms`
+            : "Please enter a positive frequency and an error between 0% and 100%.";
+    });
+
+    // ========== 6. Predict, then check ==========
+    $("predictButton").addEventListener("click", () => {
+        const choice = $("prediction").value;
+
+        $("predictionResult").textContent =
+            !choice ? "Choose an answer first."
+            : choice === "decrease" ? "Correct! Higher frequency reduces the output amplitude."
+            : "Not quite. A first-order low-pass system attenuates higher frequencies.";
+    });
+
+    // ========== 7. Validation checks ==========
+    // Each row: [name, calculated, expected, allowed difference, unit]
+    $("validateButton").addEventListener("click", () => {
+        const tau = maxTau(100, 0.05);   // max τ for 5% error at 100 Hz
+        const checks = [
+            ["Amplitude ratio",    amplitude(0.2, 2),                    0.93, 0.01, ""],
+            ["Phase lag",          lagDegrees(0.2, 2),                   21.8, 0.2,  "°"],
+            ["Maximum τ",          tau * 1000,                           0.52, 0.02, " ms"],
+            ["Phase lag at 50 Hz", lagDegrees(tau, 2 * Math.PI * 50),    9.3,  0.2,  "°"]
+        ];
+
+        $("validationResult").innerHTML = checks.map(([name, actual, expected, tol, unit]) =>
+            `<p>${name}: Expected ${expected}${unit} | Calculated ${actual.toFixed(3)}${unit} — ` +
+            `${Math.abs(actual - expected) <= tol ? "PASS" : "FAIL"}</p>`
+        ).join("");
+    });
+
+    updateGraph();   // draw everything once when the page loads
 </script>
 </body>
 </html>
