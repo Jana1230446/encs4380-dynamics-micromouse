@@ -7,8 +7,6 @@
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 
     <style>
-        /* ========== 1. Base ========== */
-        /* Colors live here, so you can change the theme in one place */
         :root {
             --navy: #17365d;
             --blue: #3478c0;
@@ -83,7 +81,6 @@
         }
         button:hover { background: var(--blue-dark); }
 
-        /* "Back to Home" link looks like a button */
         .back-button {
             display: inline-block;
             background: var(--blue);
@@ -131,7 +128,7 @@
         }
         .plot-info-box h4 { color: var(--navy); margin-top: 0; }
 
-        /* ========== 6. Mobile / small screens ========== */
+        /* ========== 6. For Mobile / small screens ========== */
         @media (max-width: 1100px) {
             .frequency-results { grid-template-columns: 1fr; }
         }
@@ -316,6 +313,7 @@
     }
 
     // ========== 4. Bode plots ==========
+    // 201 log-spaced frequencies from 0.001 to 1000 rad/s (calculated once)
     const freqs = Array.from({ length: 201 }, (_, i) => 10 ** (-3 + 6 * i / 200));
 
     // One function draws both plots: only the data and the axis title change
@@ -395,6 +393,7 @@
         ).join("");
     });
 
+    // ========== 8. Start ==========
     updateGraph();   // draw everything once when the page loads
 </script>
 </body>
