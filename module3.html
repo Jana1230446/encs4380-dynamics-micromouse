@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Characteristics Toolkit - Module 3</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <style>
+        /* ===== 1. Page basics ===== */
+        :root {
+            --navy: #17365d;
+            --blue: #3478c0;
+            --blue-dark: #235d99;
+            --gray: #64748b;
+            --bg: #f4f7fb;
+            --text: #243047;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .container { max-width: 1250px; margin: auto; padding: 35px 25px; }
+
+        /* ===== 2. Header ===== */
+        .header { text-align: center; margin-bottom: 35px; }
+        .header h1 { color: var(--navy); font-size: 36px; margin-bottom: 12px; }
+        .header h2 { color: var(--blue); font-size: 24px; }
+        .header p, .hint { color: var(--gray); line-height: 1.6; }
+
+        /* ===== 3. Cards and layout ===== */
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px #0000000f;
+            min-width: 0;
+        }
+        .card h3 { margin-top: 0; color: var(--navy); }
+        .section { margin-top: 25px; }
+
+        .model-card { text-align: center; margin-bottom: 25px; }
+        .model-card .equation { font-size: 23px; color: var(--navy); }
+
+        /* Two cards side by side */
+        .dashboard, .two-graphs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+        .dashboard { align-items: start; }
+
+        /* ===== 4. Controls and buttons ===== */
+        .control-group { margin-bottom: 21px; }
+        .control-group label { display: block; font-weight: bold; margin-bottom: 10px; }
+        input[type=range] { width: 100%; accent-color: var(--blue); cursor: pointer; }
+
+        button, .back-button {
+            background: var(--blue);
+            color: white;
+            border: 0;
+            border-radius: 8px;
+            padding: 11px 16px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        button:hover, .back-button:hover { background: var(--blue-dark); }
+        .back-button {
+            display: inline-block;
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        /* ===== 5. Prediction card ===== */
+        .prediction-card label { display: block; margin: 15px 0; }
+        .feedback { margin-top: 15px; line-height: 1.6; color: var(--navy); }
+        .note { color: var(--gray); font-size: 13px; line-height: 1.6; }
+
+        /* ===== 6. Metrics and graphs ===== */
+        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .result-box { background: var(--bg); padding: 15px; border-radius: 10px; }
+        .result-box small { display: block; margin-bottom: 8px; color: var(--gray); }
+        .result-box strong { color: var(--blue); font-size: 20px; }
+
+        .graph { width: 100%; height: 360px; }
+
+        /* ===== 7. State-space matrices ===== */
+        .matrix {
+            background: var(--bg);
+            border-radius: 10px;
+            padding: 16px;
+            font-size: 18px;
+            text-align: center;
+            line-height: 2;
+            overflow-x: auto;
+        }
+        /* The table borders look like matrix brackets [ ] */
+        .matrix table {
+            display: inline-table;
+            border-left: 2px solid var(--navy);
+            border-right: 2px solid var(--navy);
+            border-radius: 5px;
+            border-spacing: 12px 0;
+            vertical-align: middle;
+        }
+
+        /* ===== 8. Validation table ===== */
+        #validationResult { margin-top: 15px; line-height: 1.8; }
+        .validation-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .validation-table th, .validation-table td {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 9px;
+            text-align: left;
+        }
+
+        /* ===== 9. Small screens ===== */
+        @media (max-width: 850px) {
+            .dashboard, .two-graphs { grid-template-columns: 1fr; }
+            .container { padding: 20px 12px; }
+            .header h1 { font-size: 27px; }
+            .card { padding: 18px; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <a class="back-button" href="index.html">← Back to Home</a>
+
+    <header class="header">
+        <h1>Dynamic Characteristics Toolkit</h1>
+        <h2>Module 3: Second-Order Response</h2>
+        <p>Explore the mass-spring-damper system and see how its parameters affect oscillation, overshoot and stability.</p>
+    </header>
+
+    <div class="card model-card">
+        <h3>System Model</h3>
+        <div class="equation">m ẍ + b ẋ + kx = F(t)</div>
+        <p class="hint">m = mass, b = damping, k = spring stiffness, F = applied step force</p>
+    </div>
+
+    <!-- Parameters and prediction -->
+    <div class="dashboard">
+        <section class="card">
+            <h3>1. System Parameters</h3>
+            <p class="hint">Move the sliders to change the mass, damping, spring stiffness and force.</p>
+
+            <div class="control-group">
+                <label for="m">Mass (m): <span id="mValue"></span> kg</label>
+                <input id="m" type="range" min="1" max="3" step="1" value="1">
+            </div>
+            <div class="control-group">
+                <label for="b">Damping (b): <span id="bValue"></span> N·s/m</label>
+                <input id="b" type="range" min="1" max="8" step="1" value="2">
+            </div>
+            <div class="control-group">
+                <label for="k">Spring (k): <span id="kValue"></span> N/m</label>
+                <input id="k" type="range" min="1" max="8" step="1" value="4">
+            </div>
+            <div class="control-group">
+                <label for="F">Step Force (F): <span id="FValue"></span> N</label>
+                <input id="F" type="range" min="1" max="8" step="1" value="4">
+            </div>
+
+            <button onclick="resetValues()">Reset to Example 3</button>
+        </section>
+
+        <section class="card prediction-card">
+            <h3>2. Predict, Then Check</h3>
+            <p class="hint">Choose your parameter values, then predict how the mass will move.</p>
+            <p><strong>Will the response oscillate and overshoot the final position?</strong></p>
+
+            <label><input type="radio" name="prediction" value="yes"> Yes — It will oscillate and overshoot.</label>
+            <label><input type="radio" name="prediction" value="no"> No — It will reach the final position without oscillation.</label>
+
+            <button onclick="checkPrediction()">Check Prediction</button>
+            <div id="predictionResult" class="feedback" aria-live="polite"></div>
+            <p class="note">Hint: Try changing only damping (b). More damping can reduce oscillation. Your answer is checked using the current slider values.</p>
+        </section>
+    </div>
+
+    <!-- Step response and metrics -->
+    <div class="dashboard section">
+        <section class="card">
+            <h3>3. Step Response</h3>
+            <p class="hint">The graph shows displacement over time after applying a constant force.</p>
+            <div id="timeGraph" class="graph"></div>
+        </section>
+
+        <section class="card">
+            <h3>4. Performance Metrics</h3>
+            <p class="hint">These values describe how fast the system responds and settles.</p>
+
+            <div class="metric-grid">
+                <div class="result-box"><small>Natural Frequency (ωn)</small><strong id="wnResult"></strong></div>
+                <div class="result-box"><small>Damping Ratio (ζ)</small><strong id="zetaResult"></strong></div>
+                <div class="result-box"><small>Overshoot</small><strong id="overshootResult"></strong></div>
+                <div class="result-box"><small>Peak Time</small><strong id="peakResult"></strong></div>
+                <div class="result-box"><small>Rise Time (10–90%)</small><strong id="riseResult"></strong></div>
+                <div class="result-box"><small>Settling Time (±2%)</small><strong id="settlingResult"></strong></div>
+                <div class="result-box"><small>Final Position</small><strong id="finalResult"></strong></div>
+                <div class="result-box"><small>Damping Type</small><strong id="typeResult" style="font-size:16px"></strong></div>
+            </div>
+
+            <p class="note">Metrics are calculated from the response. N/A means the metric is not defined for this case.</p>
+        </section>
+    </div>
+
+    <!-- State-space -->
+    <section class="card section">
+        <h3>5. State-Space Representation</h3>
+        <p>State-space describes the system using two variables: <strong>x₁ = displacement</strong> and <strong>x₂ = velocity</strong>.</p>
+        <p>Matrix <strong>A</strong> describes how the states affect each other, while <strong>B</strong> shows how the applied force affects the system.</p>
+
+        <div class="matrix">
+            ẋ = Ax + BF(t) &nbsp;&nbsp; y = [1 &nbsp; 0]x<br>
+            A = <table>
+                    <tr><td>0</td><td>1</td></tr>
+                    <tr><td id="a21">−4</td><td id="a22">−2</td></tr>
+                </table>
+            &nbsp;&nbsp;
+            B = <table>
+                    <tr><td>0</td></tr>
+                    <tr><td id="b2">1</td></tr>
+                </table>
+        </div>
+
+        <p class="note">The matrices update automatically when you change m, b or k.</p>
+    </section>
+
+    <!-- Phase plane and S-plane -->
+    <div class="two-graphs section">
+        <section class="card">
+            <h3>6. Phase Plane</h3>
+            <p>The graph shows how displacement and velocity change together as the mass moves.</p>
+            <p>The path approaches the equilibrium point, where the mass stops moving (velocity = 0).</p>
+            <div id="phaseGraph" class="graph"></div>
+            <p class="note">Point coordinates appear on the graph; hover over the path to see more values.</p>
+        </section>
+
+        <section class="card">
+            <h3>7. Eigenvalues &amp; S-Plane</h3>
+            <p>Eigenvalues tell us whether the system is stable and whether its response oscillates.</p>
+            <p>Poles on the left side indicate stability. A nonzero imaginary part indicates oscillation.</p>
+            <div id="poleGraph" class="graph"></div>
+            <div id="poleValues" class="note"></div>
+        </section>
+    </div>
+
+    <!-- Validation -->
+    <section class="card section">
+        <h3>8. Validation Checks</h3>
+        <p class="hint">Compare the program with the reference results from the lecture. These tests use their own fixed values, so changing the sliders does not affect the validation.</p>
+        <button onclick="runValidation()">Run Validation</button>
+        <div id="validationResult" aria-live="polite"></div>
+    </section>
+
+</div>
+
+<script>
+    // ===== 1. Helpers =====
+    function $(id) {
+        return document.getElementById(id);
+    }
+
+    // Short name for number.toFixed(digits)
+    function fixed(value, digits) {
+        return value.toFixed(digits);
+    }
+
+    // Read one slider as a number
+    function sliderValue(id) {
+        return Number($(id).value);
+    }
+
+    // ===== 2. Simulation =====
+    // Rate of change of the state x = [position, velocity]
+    // Returns [velocity, acceleration]
+    function derivative(x, m, b, k, F) {
+        return [x[1], (F - b * x[1] - k * x[0]) / m];
+    }
+
+    // Returns state + factor * slope (used inside the RK4 method)
+    function nudge(x, slope, factor) {
+        return [x[0] + factor * slope[0], x[1] + factor * slope[1]];
+    }
+
+    // Simulates 30 seconds of the step response with the RK4 method.
+    // RK4 = four slope estimates per time step, then a weighted average.
+    function simulate(m, b, k, F) {
+        const h = 0.01;                  // time step (s)
+        const steps = 30 / h;            // 30 seconds in total
+        let x = [0, 0];                  // start at rest: position = 0, velocity = 0
+
+        const T = [0];                   // time
+        const P = [0];                   // position
+        const V = [0];                   // velocity
+
+        for (let i = 1; i <= steps; i++) {
+            const k1 = derivative(x, m, b, k, F);
+            const k2 = derivative(nudge(x, k1, h / 2), m, b, k, F);
+            const k3 = derivative(nudge(x, k2, h / 2), m, b, k, F);
+            const k4 = derivative(nudge(x, k3, h), m, b, k, F);
+
+            x = [
+                x[0] + h * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]) / 6,
+                x[1] + h * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]) / 6
+            ];
+
+            T.push(i * h);
+            P.push(x[0]);
+            V.push(x[1]);
+        }
+        return { T: T, P: P, V: V };
+    }
+
+    // ===== 3. Performance metrics =====
+    // Time when the position first rises through `level`
+    // (linear interpolation between two samples). Returns null if it never does.
+    function crossing(T, P, level) {
+        for (let i = 1; i < P.length; i++) {
+            if (P[i] >= level && P[i - 1] < level) {
+                return T[i - 1] + (level - P[i - 1]) * (T[i] - T[i - 1]) / (P[i] - P[i - 1]);
+            }
+        }
+        return null;
+    }
+
+    function metrics(data, m, b, k, F) {
+        const wn = Math.sqrt(k / m);                       // natural frequency
+        const zeta = b / (2 * Math.sqrt(k * m));           // damping ratio
+        const finalValue = F / k;                          // final position
+
+        // Find the highest point, and the last time the response was outside ±2%
+        let peak = 0;
+        let peakIndex = 0;
+        let lastOutside = -1;
+        for (let i = 0; i < data.P.length; i++) {
+            if (data.P[i] > peak) {
+                peak = data.P[i];
+                peakIndex = i;
+            }
+            if (Math.abs(data.P[i] - finalValue) > 0.02 * finalValue) {
+                lastOutside = i;
+            }
+        }
+
+        // Rise time = time to go from 10% to 90% of the final value
+        const t10 = crossing(data.T, data.P, 0.1 * finalValue);
+        const t90 = crossing(data.T, data.P, 0.9 * finalValue);
+        const rise = (t10 !== null && t90 !== null) ? t90 - t10 : null;
+
+        // Settling time = first sample after the last time outside ±2%
+        const settling = lastOutside < data.T.length - 1 ? data.T[lastOutside + 1] : null;
+
+        // Damping type from the damping ratio
+        let type = "Critically Damped";
+        if (zeta < 1 - 1e-9) type = "Underdamped";
+        if (zeta > 1 + 1e-9) type = "Overdamped";
+
+        return {
+            wn: wn,
+            zeta: zeta,
+            final: finalValue,
+            overshoot: Math.max(0, (peak - finalValue) / finalValue * 100),
+            peakTime: zeta < 1 ? data.T[peakIndex] : null,   // only defined if underdamped
+            rise: rise,
+            settling: settling,
+            type: type
+        };
+    }
+
+    // ===== 4. Plot settings =====
+    const plotConfig = { responsive: true, displaylogo: false };
+
+    // Shared layout for all three graphs
+    function plotOptions(xTitle, yTitle) {
+        return {
+            margin: { l: 55, r: 20, t: 25, b: 55 },
+            paper_bgcolor: "white",
+            plot_bgcolor: "white",
+            xaxis: { title: xTitle, zeroline: true, gridcolor: "#e9eef5" },
+            yaxis: { title: yTitle, zeroline: true, gridcolor: "#e9eef5" },
+            showlegend: false,
+            hovermode: "closest"
+        };
+    }
+
+    // ===== 5. Step response graph =====
+    function drawTimeGraph(data, result) {
+        const plot = [
+            // Blue curve: position over time
+            { x: data.T, y: data.P, mode: "lines", name: "Position",
+              line: { color: "#3478c0", width: 3 } },
+            // Green dashed line: final position
+            { x: [0, 30], y: [result.final, result.final], mode: "lines", name: "Final position",
+              line: { color: "#24966b", dash: "dash" } }
+        ];
+
+        // Zoom the time axis: 8 to 30 s, based on the settling time
+        const layout = plotOptions("Time (s)", "Displacement (m)");
+        const zoomEnd = result.settling === null ? 15 : result.settling + 2;
+        layout.xaxis.range = [0, Math.min(30, Math.max(8, zoomEnd))];
+
+        Plotly.react("timeGraph", plot, layout, plotConfig);
+    }
+
+    // ===== 6. Phase plane (velocity vs. position) =====
+    function drawPhasePlane(data, result) {
+        // Use every 10th point so the graph stays light
+        const px = [];
+        const py = [];
+        for (let i = 0; i < data.P.length; i += 10) {
+            px.push(data.P[i]);
+            py.push(data.V[i]);
+        }
+
+        const hoverText = "Position: %{x:.3f} m<br>Velocity: %{y:.3f} m/s<extra></extra>";
+        const plot = [
+            // The path of the motion
+            { x: px, y: py, mode: "lines", name: "Trajectory", hovertemplate: hoverText,
+              line: { color: "#3478c0", width: 3 } },
+            // Start point (orange) and final point (green)
+            { x: [0, result.final], y: [0, 0], mode: "markers+text", hovertemplate: hoverText,
+              text: ["Start (0, 0)", "Final (" + fixed(result.final, 2) + ", 0)"],
+              textposition: ["bottom right", "top right"],
+              marker: { size: 9, color: ["#e59a36", "#24966b"] } }
+        ];
+
+        const layout = plotOptions("Displacement (m)", "Velocity (m/s)");
+        layout.margin.t = 40;
+
+        Plotly.react("phaseGraph", plot, layout, plotConfig);
+    }
+
+    // ===== 7. Eigenvalues and S-plane =====
+    // Eigenvalues of A (the same as the poles).
+    // Each pole is { re: real part, im: imaginary part }.
+    function eigenvalues(m, b, k) {
+        const re = -b / (2 * m);
+        const discriminant = b * b - 4 * m * k;
+
+        // Negative discriminant: complex pair (oscillation)
+        if (discriminant < 0) {
+            const im = Math.sqrt(-discriminant) / (2 * m);
+            return [{ re: re, im: im }, { re: re, im: -im }];
+        }
+        // Otherwise: two real poles
+        const root = Math.sqrt(discriminant) / (2 * m);
+        return [{ re: re + root, im: 0 }, { re: re - root, im: 0 }];
+    }
+
+    // Pole as text, e.g. "-1.000 + j1.732"
+    function poleText(p) {
+        if (Math.abs(p.im) < 1e-9) return fixed(p.re, 3);
+        return fixed(p.re, 3) + (p.im >= 0 ? " + j" : " - j") + fixed(Math.abs(p.im), 3);
+    }
+
+    function drawPoleGraph(m, b, k) {
+        const poles = eigenvalues(m, b, k);
+        const re = [];
+        const im = [];
+        const labels = [];
+
+        for (let i = 0; i < poles.length; i++) {
+            re.push(poles[i].re);
+            im.push(poles[i].im);
+            labels.push("λ" + (i + 1) + " = " + poleText(poles[i]));
+        }
+
+        const plot = [{
+            x: re, y: im, mode: "markers+text", text: labels,
+            textposition: ["top left", "bottom left"],
+            marker: { color: "#3478c0", size: 11, symbol: "x", line: { width: 2 } },
+            hovertemplate: "Real: %{x:.3f}<br>Imaginary: %{y:.3f}<extra></extra>"
+        }];
+
+        // Axis ranges that always fit both poles
+        const maxRe = Math.max(2, Math.abs(re[0]), Math.abs(re[1]));
+        const maxIm = Math.max(2, Math.abs(im[0]), Math.abs(im[1]));
+
+        const layout = plotOptions("Real", "Imaginary");
+        layout.xaxis.range = [-maxRe * 1.7, maxRe * 0.65];
+        layout.yaxis.range = [-maxIm * 1.7, maxIm * 1.7];
+        // Dotted vertical line at Real = 0 (the stability border)
+        layout.shapes = [{
+            type: "line", x0: 0, x1: 0, y0: -maxIm * 1.7, y1: maxIm * 1.7,
+            line: { color: "#94a3b8", dash: "dot" }
+        }];
+
+        Plotly.react("poleGraph", plot, layout, plotConfig);
+
+        const isRepeated = poles[0].im === 0 && poles[0].re === poles[1].re;
+        $("poleValues").textContent =
+            "Eigenvalues / Poles: " + labels.join(" , ") + (isRepeated ? " (repeated pole)" : "");
+    }
+
+    // ===== 8. Predict, then check =====
+    // Text shown after the student checks the prediction
+    function feedbackLine(correct, result) {
+        const start = correct ? "Correct! " : "Not quite. ";
+        const behavior = result.zeta < 1
+            ? "The response oscillates and has overshoot."
+            : "The response does not oscillate or overshoot.";
+        return start + "Actual behavior: " + result.type + ". ζ = " + fixed(result.zeta, 2) + ". " + behavior;
+    }
+
+    function checkPrediction() {
+        const choice = document.querySelector('input[name="prediction"]:checked');
+        if (!choice) {
+            $("predictionResult").textContent = "Please choose Yes or No first.";
+            return;
+        }
+
+        const m = sliderValue("m");
+        const b = sliderValue("b");
+        const k = sliderValue("k");
+        const F = sliderValue("F");
+        const result = metrics(simulate(m, b, k, F), m, b, k, F);
+
+        // The response oscillates only when ζ < 1
+        const oscillates = result.zeta < 1;
+        const saidYes = choice.value === "yes";
+        $("predictionResult").textContent = feedbackLine(saidYes === oscillates, result);
+    }
+
+    // ===== 9. Update the whole page =====
+    // Runs on page load and every time a slider moves
+    function updateAll() {
+        const m = sliderValue("m");
+        const b = sliderValue("b");
+        const k = sliderValue("k");
+        const F = sliderValue("F");
+
+        // Show the slider numbers next to the labels
+        for (const id of ["m", "b", "k", "F"]) {
+            $(id + "Value").textContent = $(id).value;
+        }
+        $("predictionResult").textContent = "";   // clear the old prediction feedback
+
+        // Run the simulation and calculate the metrics
+        const data = simulate(m, b, k, F);
+        const result = metrics(data, m, b, k, F);
+
+        // Performance metrics
+        $("wnResult").textContent = fixed(result.wn, 2) + " rad/s";
+        $("zetaResult").textContent = fixed(result.zeta, 2);
+        $("overshootResult").textContent = fixed(result.overshoot, 1) + "%";
+        $("peakResult").textContent = result.peakTime === null ? "N/A" : fixed(result.peakTime, 2) + " s";
+        $("riseResult").textContent = result.rise === null ? "N/A" : fixed(result.rise, 2) + " s";
+        $("settlingResult").textContent = result.settling === null ? "Not settled in 30 s" : fixed(result.settling, 2) + " s";
+        $("finalResult").textContent = fixed(result.final, 2) + " m";
+        $("typeResult").textContent = result.type;
+
+        // State-space matrix values: A = [0 1; -k/m -b/m], B = [0; 1/m]
+        $("a21").textContent = fixed(-k / m, 2);
+        $("a22").textContent = fixed(-b / m, 2);
+        $("b2").textContent = fixed(1 / m, 2);
+
+        // Graphs
+        drawTimeGraph(data, result);
+        drawPhasePlane(data, result);
+        drawPoleGraph(m, b, k);
+    }
+
+    // ===== 10. Validation checks =====
+    function runValidation() {
+        // Case 1: m = 1, b = 2, k = 4 (ζ = 0.5).  Case 2: m = 1, b = 4, k = 4 (ζ = 1).
+        const first = metrics(simulate(1, 2, 4, 4), 1, 2, 4, 4);
+        const critical = metrics(simulate(1, 4, 4, 4), 1, 4, 4, 4);
+        const poles = eigenvalues(1, 2, 4);
+
+        // Each check: [name, calculated value, expected value, allowed difference, unit]
+        const checks = [
+            ["ζ = 0.5: Overshoot",   first.overshoot,  16.3,           0.2,   "%"],
+            ["ζ = 1: No overshoot",  critical.overshoot, 0,            0.05,  "%"],
+            ["Natural frequency",    first.wn,         2,              0.001, " rad/s"],
+            ["Damping ratio",        first.zeta,       0.5,            0.001, ""],
+            ["Pole 1 real part",     poles[0].re,      -1,             0.001, ""],
+            ["Pole 1 imaginary part", poles[0].im,     Math.sqrt(3),   0.002, ""],
+            ["Pole 2 real part",     poles[1].re,      -1,             0.001, ""],
+            ["Pole 2 imaginary part", poles[1].im,     -Math.sqrt(3),  0.002, ""]
+        ];
+
+        let html = '<table class="validation-table">' +
+                   "<tr><th>Test</th><th>Expected</th><th>Calculated</th><th>Status</th></tr>";
+
+        for (const [name, calculated, expected, tolerance, unit] of checks) {
+            const pass = Math.abs(calculated - expected) <= tolerance;
+            html += "<tr><td>" + name + "</td>" +
+                    "<td>" + fixed(expected, 3) + unit + "</td>" +
+                    "<td>" + fixed(calculated, 3) + unit + "</td>" +
+                    "<td>" + (pass ? "PASS ✓" : "FAIL ✗") + "</td></tr>";
+        }
+        $("validationResult").innerHTML = html + "</table>";
+    }
+
+    // ===== 11. Reset button =====
+    function resetValues() {
+        $("m").value = 1;
+        $("b").value = 2;
+        $("k").value = 4;
+        $("F").value = 4;
+        updateAll();
+    }
+    // Update the page whenever any slider moves
+    for (const id of ["m", "b", "k", "F"]) {
+        $(id).addEventListener("input", updateAll);
+    }
+    updateAll();   // draw everything once when the page loads
+</script>
+</body>
+</html>
