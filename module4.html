@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module 4 - Guess the Sensor</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <style>
+        /* ===== 1. Page basics ===== */
+        :root {
+            --navy: #17365d;
+            --blue: #3478c0;
+            --blue-dark: #235d99;
+            --gray: #64748b;
+            --bg: #f4f7fb;
+            --text: #243047;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+        .container { max-width: 1250px; margin: auto; padding: 35px 25px; }
+
+        /* ===== 2. Header ===== */
+        .header { text-align: center; margin-bottom: 35px; }
+        .header h1 { color: var(--navy); font-size: 36px; margin-bottom: 12px; }
+        .header h2 { color: var(--blue); font-size: 24px; }
+        .header p, .hint { color: var(--gray); line-height: 1.6; }
+
+        /* ===== 3. Cards and layout ===== */
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px #0000000f;
+            min-width: 0;
+        }
+        .card h3 { margin-top: 0; color: var(--navy); }
+        .section { margin-top: 25px; }
+
+        /* Two cards side by side */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            align-items: start;
+        }
+
+        /* ===== 4. Buttons ===== */
+        button, .back-button {
+            background: var(--blue);
+            color: white;
+            border: 0;
+            border-radius: 8px;
+            padding: 11px 16px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        button:hover, .back-button:hover { background: var(--blue-dark); }
+        button:disabled { opacity: .5; cursor: not-allowed; }
+        .back-button {
+            display: inline-block;
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+
+        /* ===== 5. Guess inputs ===== */
+        input[type=number] {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+        .guesses { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .guesses label { display: block; font-weight: bold; margin-bottom: 8px; }
+
+        .note { color: var(--gray); font-size: 13px; line-height: 1.6; }
+        .feedback { margin-top: 15px; line-height: 1.6; color: var(--navy); }
+
+        /* ===== 6. Score and graph ===== */
+        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .result-box { background: var(--bg); padding: 15px; border-radius: 10px; }
+        .result-box small { display: block; margin-bottom: 8px; color: var(--gray); }
+        .result-box strong { color: var(--blue); font-size: 20px; }
+
+        .graph { width: 100%; height: 360px; }
+
+        /* ===== 7. Worked solution ===== */
+        .solution { line-height: 1.9; }
+        .solution p { margin: 7px 0; }
+        .mathline {
+            background: var(--bg);
+            border-radius: 7px;
+            padding: 9px 12px;
+            overflow-x: auto;
+        }
+
+        /* ===== 8. Small screens ===== */
+        @media (max-width: 850px) {
+            .dashboard { grid-template-columns: 1fr; }
+            .container { padding: 20px 12px; }
+            .header h1 { font-size: 27px; }
+            .card { padding: 18px; }
+        }
+        @media (max-width: 550px) {
+            .guesses { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <a class="back-button" href="index.html">← Back to Home</a>
+
+    <header class="header">
+        <h1>Dynamic Characteristics Toolkit</h1>
+        <h2>Module 4: Guess the Sensor</h2>
+        <p>Read the noisy response, estimate the hidden parameters, then check your answer.</p>
+    </header>
+
+    <!-- Current sensor and instructions -->
+    <div class="dashboard">
+        <section class="card">
+            <h3>1. Hidden Sensor</h3>
+            <p><strong id="round">Round 1</strong> — <strong id="type"></strong></p>
+            <p class="hint" id="inputInfo"></p>
+            <button onclick="newSensor()">New Sensor</button>
+        </section>
+
+        <section class="card">
+            <h3>How to Play</h3>
+            <p>1. Study the noisy response graph.</p>
+            <p>2. Enter your best estimates for the two hidden parameters.</p>
+            <p>3. Click <strong>Check Guess</strong> to reveal the true values and compare curves.</p>
+        </section>
+    </div>
+
+    <!-- Sensor response graph -->
+    <section class="card section">
+        <h3>2. Sensor Response</h3>
+        <p class="hint">Hover over the curve to read Time and Output. The measurements contain a little noise.</p>
+        <div id="graph" class="graph" style="height:430px"></div>
+    </section>
+
+    <!-- Guess and score -->
+    <div class="dashboard section">
+        <section class="card">
+            <h3>3. Your Guess</h3>
+
+            <div class="guesses">
+                <div>
+                    <label id="label1" for="guess1"></label>
+                    <input id="guess1" type="number" min="0.01" step="any" placeholder="Enter your estimate">
+                </div>
+                <div>
+                    <label id="label2" for="guess2"></label>
+                    <input id="guess2" type="number" min="0.01" step="any" placeholder="Enter your estimate">
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button onclick="showHint()">Show Hint</button>
+                <button id="check" onclick="checkGuess()">Check Guess</button>
+            </div>
+
+            <p id="hint" class="note"></p>
+            <p id="message" class="feedback" aria-live="polite"></p>
+        </section>
+
+        <section class="card">
+            <h3>4. Score</h3>
+            <div class="metric-grid">
+                <div class="result-box"><small>This Round</small><strong id="roundScore">— / 100</strong></div>
+                <div class="result-box"><small>Session Average</small><strong id="totalScore">— / 100</strong></div>
+            </div>
+            <p class="hint">Each parameter is worth 50 points.</p>
+            <p class="note">Error ≤ 5%: 50 points · 5–10%: 35 points · 10–20%: 25 points · Over 20%: 0 points.</p>
+            <div id="scores"></div>
+        </section>
+    </div>
+
+    <!-- Hidden until the guess is checked -->
+    <section id="solutionCard" class="card section" hidden>
+        <h3>5. Correct Solution</h3>
+        <div id="solution" class="solution"></div>
+    </section>
+
+</div>
+
+<script>
+    // ===== 1. Helpers =====
+    function el(id) {
+        return document.getElementById(id);
+    }
+
+    // Random number between min and max
+    function random(min, max) {
+        return min + Math.random() * (max - min);
+    }
+
+    // Round to 2 decimals and keep it as a number (3.14159 -> 3.14)
+    function round2(n) {
+        return Number(n.toFixed(2));
+    }
+
+    // Number as text for display: 2 decimals, or 6 decimals for "precise"
+    function fmt(n) { return Number(n).toFixed(2); }
+    function precise(n) { return Number(n).toFixed(6); }
+
+    function isPositive(n) {
+        return Number.isFinite(n) && n > 0;
+    }
+
+    // ===== 2. Game state =====
+    let sensor;                  // the hidden sensor of this round
+    let time = [];               // time values for the graph
+    let trueY = [];              // clean response
+    let noisyY = [];             // response with noise (what the student sees)
+    let roundNumber = 0;
+    let totalScore = 0;          // sum of all round scores
+    let completedRounds = 0;
+    let checked = false;         // true after the guess was checked
+
+    // ===== 3. Create a random sensor =====
+    // First order: 50% chance. Second order: 50% chance.
+    function createRandomSensor() {
+        if (Math.random() < 0.5) {
+            // First order: 75% step input, 25% sine input
+            const signal = Math.random() < 0.75 ? "step" : "sine";
+            return {
+                type: "first",
+                signal: signal,
+                K: round2(random(0.8, 3)),       // gain
+                tau: round2(random(0.5, 3)),     // time constant
+                omega: 1                         // sine frequency (rad/s)
+            };
+        }
+        // Second order is always a step input
+        return {
+            type: "second",
+            signal: "step",
+            zeta: round2(random(0.2, 0.8)),      // damping ratio
+            wn: round2(random(1, 3))             // natural frequency
+        };
+    }
+
+    // Start a new round
+    function newSensor() {
+        roundNumber++;
+        checked = false;
+        sensor = createRandomSensor();
+
+        const isFirst = sensor.type === "first";
+
+        // Sensor info
+        el("round").textContent = "Round " + roundNumber;
+        el("type").textContent = (isFirst ? "First-Order" : "Second-Order") +
+                                 " · " + (sensor.signal === "step" ? "Step" : "Sine");
+        el("inputInfo").textContent = sensor.signal === "sine"
+            ? "Input: sin(t), frequency ω = 1 rad/s (shown as a dashed line)."
+            : "Input: unit step, amplitude = 1.";
+
+        // Names of the two hidden parameters
+        el("label1").textContent = isFirst ? "Gain (K)" : "Damping Ratio (ζ)";
+        el("label2").textContent = isFirst ? "Time Constant (τ), s" : "Natural Frequency (ωₙ), rad/s";
+
+        // Clear everything from the previous round
+        el("guess1").value = "";
+        el("guess2").value = "";
+        el("guess1").disabled = false;
+        el("guess2").disabled = false;
+        el("check").disabled = false;
+        el("hint").textContent = "";
+        el("message").textContent = "";
+        el("scores").textContent = "";
+        el("roundScore").textContent = "— / 100";
+        el("solutionCard").hidden = true;
+
+        makeData();
+        drawGraph();
+    }
+
+    // ===== 4. Sensor response =====
+    // Output of the sensor at time t.
+    // `p` holds the parameters (the true ones, or the student's guess).
+    function response(t, p) {
+        if (sensor.type === "first") {
+            // First order, step input: y = K (1 - e^(-t/τ))
+            if (sensor.signal === "step") {
+                return p.K * (1 - Math.exp(-t / p.tau));
+            }
+
+            // First order, sine input (includes the start-up transient, so y(0) = 0)
+            const w = sensor.omega;
+            const a = w * p.tau;
+            return p.K / (1 + a * a) *
+                   (Math.sin(w * t) - a * Math.cos(w * t) + a * Math.exp(-t / p.tau));
+        }
+
+        // Second order (underdamped), step input
+        const z = p.zeta;
+        const wn = p.wn;
+        const wd = wn * Math.sqrt(1 - z * z);    // damped frequency
+        return 1 - Math.exp(-z * wn * t) *
+               (Math.cos(wd * t) + z / Math.sqrt(1 - z * z) * Math.sin(wd * t));
+    }
+
+    // Build the time, clean, and noisy data (251 points)
+    function makeData() {
+        time = [];
+        trueY = [];
+        noisyY = [];
+
+        // How long the graph runs
+        let end;
+        if (sensor.type === "second") end = 10 / sensor.wn;
+        else if (sensor.signal === "sine") end = 8 * Math.PI;
+        else end = 7 * sensor.tau;
+
+        // Noise size depends on the gain for first-order sensors
+        const noiseScale = sensor.type === "first" ? sensor.K : 1;
+
+        for (let i = 0; i <= 250; i++) {
+            const t = end * i / 250;
+            const y = response(t, sensor);
+            time.push(t);
+            trueY.push(y);
+            noisyY.push(y + random(-0.015, 0.015) * noiseScale);
+        }
+    }
+
+    // ===== 5. Graph =====
+    // `guess` is only used after the guess was checked
+    function drawGraph(guess) {
+        // Blue: noisy measurements (always shown)
+        const traces = [{
+            x: time, y: noisyY, name: "Sensor measurements",
+            mode: "lines+markers",
+            line: { color: "#3478c0", width: 1 },
+            marker: { color: "#3478c0", size: 3 },
+            hovertemplate: "Time: %{x:.2f} s<br>Output: %{y:.3f}<extra></extra>"
+        }];
+
+        // Gray dashed line: the input sine wave
+        if (sensor.signal === "sine") {
+            const input = [];
+            for (let i = 0; i < time.length; i++) {
+                input.push(Math.sin(sensor.omega * time[i]));
+            }
+            traces.push({
+                x: time, y: input, name: "Input sine",
+                mode: "lines", line: { color: "#94a3b8", dash: "dash" }
+            });
+        }
+
+        // After checking: show the true curve and the student's guess
+        if (checked) {
+            const guessedY = [];
+            for (let i = 0; i < time.length; i++) {
+                guessedY.push(response(time[i], guess));
+            }
+            traces.push({
+                x: time, y: trueY, name: "True response",
+                mode: "lines", line: { color: "#24966b", width: 3 }
+            });
+            traces.push({
+                x: time, y: guessedY, name: "Your guess",
+                mode: "lines", line: { color: "#e59a36", dash: "dash", width: 3 }
+            });
+        }
+
+        Plotly.react("graph", traces, {
+            margin: { l: 65, r: 20, t: 20, b: 65 },
+            xaxis: { title: "Time (s)", gridcolor: "#e6edf5" },
+            yaxis: { title: "Output", gridcolor: "#e6edf5" },
+            font: { family: "Arial", color: "#243047" },
+            legend: { orientation: "h", y: -0.25 },
+            hovermode: "closest"
+        }, { responsive: true, displaylogo: false });
+    }
+
+    // ===== 6. Hint button =====
+    function showHint() {
+        let text;
+        if (sensor.type === "second") {
+            text = "Hint: Overshoot depends only on ζ. Peak time is related to ωₙ.";
+        } else if (sensor.signal === "step") {
+            text = "Hint: Look at the final output and the time needed to reach 63.2% of it.";
+        } else {
+            text = "Hint: The time constant affects both the amplitude and phase lag.";
+        }
+        el("hint").textContent = text;
+    }
+
+    // ===== 7. Grading =====
+    // Percent error and points (max 50) for one parameter
+    function grade(actual, guess) {
+        const error = Math.abs(guess - actual) / actual * 100;
+
+        let points = 0;
+        if (error <= 5) points = 50;
+        else if (error <= 10) points = 35;
+        else if (error <= 20) points = 25;
+
+        return { error: error, points: points };
+    }
+
+    function checkGuess() {
+        if (checked) return;
+
+        const a = Number(el("guess1").value);    // first guess
+        const b = Number(el("guess2").value);    // second guess
+        const isFirst = sensor.type === "first";
+
+        // Check the inputs: both must be filled and positive.
+        // For second order, ζ must also be below 1.
+        const isEmpty = el("guess1").value === "" || el("guess2").value === "";
+        const isInvalid = !isPositive(a) || !isPositive(b) || (!isFirst && a >= 1);
+        if (isEmpty || isInvalid) {
+            el("message").textContent = "Enter two positive numbers." +
+                (isFirst ? "" : " For this second-order challenge, 0 < ζ < 1.");
+            return;
+        }
+
+        // Compare each guess with the true value
+        const trueFirst = isFirst ? sensor.K : sensor.zeta;
+        const trueSecond = isFirst ? sensor.tau : sensor.wn;
+        const grade1 = grade(trueFirst, a);
+        const grade2 = grade(trueSecond, b);
+        const score = grade1.points + grade2.points;
+
+        // Update the score
+        checked = true;
+        completedRounds++;
+        totalScore += score;
+        el("roundScore").textContent = score + " / 100";
+        el("totalScore").textContent = fmt(totalScore / completedRounds) + " / 100";
+        el("scores").innerHTML =
+            "<p>Parameter 1: " + fmt(grade1.error) + "% error → " + grade1.points + "/50</p>" +
+            "<p>Parameter 2: " + fmt(grade2.error) + "% error → " + grade2.points + "/50</p>";
+        el("message").textContent = "Answer revealed! Green: true curve. Orange: your guess.";
+
+        // Lock the inputs
+        el("guess1").disabled = true;
+        el("guess2").disabled = true;
+        el("check").disabled = true;
+
+        // Show the true curve and the guess, then the worked solution
+        drawGraph(isFirst ? { K: a, tau: b } : { zeta: a, wn: b });
+        showSolution(a, b);
+    }
+
+    // ===== 8. Worked solution =====
+    // One function per sensor type. Each returns the HTML of the steps.
+
+    // First order, step input
+    function solutionFirstStep(s) {
+        const point = 0.63212056 * s.K;    // the 63.2% point
+        return `
+            <p><strong>True values:</strong> K = ${fmt(s.K)}, τ = ${fmt(s.tau)} s</p>
+            <p><strong>Step 1:</strong> For a unit step, K = final output = ${fmt(s.K)}.</p>
+            <p><strong>Step 2:</strong> Find the 63.2% point:</p>
+            <div class='mathline'>0.632 × ${fmt(s.K)} = ${fmt(point)}</div>
+            <p><strong>Step 3:</strong> The ideal response reaches ${fmt(point)} at t ≈ ${fmt(s.tau)} s, so τ = ${fmt(s.tau)} s.</p>
+            <p class='note'>Alternative log method: ln[(K − y(t))/K] = −t/τ.
+               Here the line's slope is −1/${fmt(s.tau)} = ${fmt(-1 / s.tau)} s⁻¹.</p>`;
+    }
+
+    // First order, sine input
+    function solutionFirstSine(s) {
+        const w = s.omega;
+        const amplitude = s.K / Math.sqrt(1 + (w * s.tau) ** 2);
+        const phaseDeg = Math.atan(w * s.tau) * 180 / Math.PI;
+        return `
+            <p><strong>True values:</strong> K = ${fmt(s.K)}, τ = ${fmt(s.tau)} s</p>
+            <p><strong>Step 1:</strong> Read the steady-state output amplitude A = ${fmt(amplitude)} and phase lag φ = ${fmt(phaseDeg)}°.</p>
+            <p><strong>Step 2:</strong> Use φ = arctan(ωτ):</p>
+            <div class='mathline'>τ = tan(${fmt(phaseDeg)}°) / ${fmt(w)} = ${fmt(s.tau)} s</div>
+            <p><strong>Step 3:</strong> Use A = K / √(1 + (ωτ)²):</p>
+            <div class='mathline'>K = ${fmt(amplitude)} × √(1 + (${fmt(w)} × ${fmt(s.tau)})²) = ${fmt(s.K)}</div>
+            <p class='note'>Amplitude and phase are measured after the initial transient fades.</p>`;
+    }
+
+    // Second order, step input
+    function solutionSecond(s) {
+        const z = s.zeta;
+        const wn = s.wn;
+        const overshoot = 100 * Math.exp(-Math.PI * z / Math.sqrt(1 - z * z));   // in %
+        const peakTime = Math.PI / (wn * Math.sqrt(1 - z * z));
+        const peak = 1 + overshoot / 100;
+        return `
+            <p><strong>True values:</strong> ζ = ${fmt(z)}, ωₙ = ${fmt(wn)} rad/s</p>
+            <p><strong>Step 1:</strong> Final output = 1; first peak = ${precise(peak)} at t ≈ ${precise(peakTime)} s.</p>
+            <div class='mathline'>OS = (${precise(peak)} − 1) / 1 × 100 ≈ ${fmt(overshoot)}%</div>
+            <p><strong>Step 2:</strong> Calculate damping ratio:</p>
+            <div class='mathline'>ζ = −ln(${precise(overshoot / 100)}) / √[π² + ln²(${precise(overshoot / 100)})] ≈ ${fmt(z)}</div>
+            <p><strong>Step 3:</strong> Use peak time to find natural frequency:</p>
+            <div class='mathline'>ωₙ = π / (${precise(peakTime)} × √(1 − ${precise(z)}²)) ≈ ${fmt(wn)} rad/s</div>`;
+    }
+
+    // Show the solution card for the current sensor
+    function showSolution(a, b) {
+        let html = `<p><strong>Your guess:</strong> ${fmt(a)}, ${fmt(b)}</p>`;
+
+        if (sensor.type === "first" && sensor.signal === "step") {
+            html += solutionFirstStep(sensor);
+        } else if (sensor.type === "first") {
+            html += solutionFirstSine(sensor);
+        } else {
+            html += solutionSecond(sensor);
+        }
+
+        html += "<p class='note'>These worked values come from the clean model. The noisy graph may give slightly different readings.</p>";
+        el("solution").innerHTML = html;
+        el("solutionCard").hidden = false;
+    }
+
+    newSensor();  
+</script>
+</body>
+</html>
